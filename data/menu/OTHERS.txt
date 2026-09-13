@@ -6,4 +6,5 @@
 [5] アクセス記録表示  (log)
 [6] news読みだし      (readnews)
 [7] news書き込み      (postnews)
+[8] ローグ            (rogue)
 

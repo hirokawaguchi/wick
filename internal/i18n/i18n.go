@@ -91,6 +91,14 @@ var catalog = map[string]map[Lang]string{
 	"notes.unread_scan": {JA: "未読スキャン", EN: "unread scan"},
 	"notes.board_list":  {JA: "ボード一覧", EN: "board list"},
 
+	// rogue（内部ゲーム。入口コマンドは Wick 追加）
+	"rogue.too_small":  {JA: "** 画面が狭すぎます（80x24 以上が必要）。terminal で設定してください **", EN: "** screen too small (need at least 80x24). Set it with terminal **"},
+	"rogue.score_fail": {JA: "スコアを読み出せませんでした。", EN: "Could not read the scores."},
+	"rogue.no_scores":  {JA: "まだ記録がありません。", EN: "No scores yet."},
+	"rogue.score_head": {JA: " 順  冒険者           金塊  最深階  結末", EN: " No  Adventurer        Gold  Depth  Result"},
+	"rogue.depth_unit": {JA: "地下", EN: "L"},
+	"rogue.result_won": {JA: "魔除けを持ち帰り生還！", EN: "escaped with the Amulet!"},
+
 	// power / kill / shutdown
 	"power.started":     {JA: "起動時刻 : %s", EN: "Started : %s"},
 	"power.uptime":      {JA: "稼働時間 : %s", EN: "Uptime  : %s"},
@@ -324,7 +332,8 @@ var catalog = map[string]map[Lang]string{
 	"agent.state_running": {JA: "稼働", EN: "running"},
 
 	// 通知（internal/session/notice.go）。受信者の表示言語で出す。
-	"notice.telegram": {JA: "** 電報 from %s (%s) %s **", EN: "** telegram from %s (%s) %s **"},
+	"notice.telegram":       {JA: "** 電報 from %s (%s) %s **", EN: "** telegram from %s (%s) %s **"},
+	"notice.telegram_short": {JA: "電報 %s: %s", EN: "telegram %s: %s"},
 	"notice.join":     {JA: "-- %s が入室 --", EN: "-- %s entered --"},
 	"notice.leave":    {JA: "-- %s が退室 --", EN: "-- %s left --"},
 	"notice.knock":    {JA: "-- %s がノック --", EN: "-- %s knocked --"},

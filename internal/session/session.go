@@ -54,6 +54,11 @@ type Session struct {
 	inputPrompt string
 	inputBuf    *[]rune
 
+	// 全画面（rogue など）表示中は通知を即描画せず保留する。画面が壊れないよう、
+	// ゲーム側が TakeHeldNotices で取り出してメッセージ行に自前で出す。
+	holdNotices bool
+	heldNotices []Notice
+
 	mu     sync.Mutex
 	closed bool
 	cancel context.CancelFunc

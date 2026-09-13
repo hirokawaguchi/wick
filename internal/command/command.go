@@ -60,6 +60,7 @@ func NewRegistry() *Registry {
 	r.registerMail()
 	r.registerNews()
 	r.registerSignup()
+	r.registerGame()
 	return r
 }
 

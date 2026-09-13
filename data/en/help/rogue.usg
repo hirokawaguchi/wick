@@ -1,0 +1,23 @@
+rogue - play the built-in game Rogue (clone)
+
+usage: rogue [-s]
+
+    With no argument you enter the dungeon. If a saved game exists, you are
+    asked whether to restore it.
+    -s  show the top scores so far.
+
+    Fetch the Amulet of Yendor from level 26 and climb back out. Full-screen.
+    Your terminal must be at least 80x24 (set it with the terminal command).
+
+    In-game keys (after Rogue2.Official):
+      h j k l  move    y u b n  diagonals   CAPS = run that way
+      .  rest   s  search   ,  pick up   >  go down   <  go up
+      i  inventory   I  single item   d  drop   c  call   D  discoveries
+      w  wield   W  wear   T  take off
+      q  quaff   r  read   e  eat   z  zap   t  throw
+      P  put on ring   R  remove ring   ^  identify trap   /  what is
+      ?  help   S  save and suspend   Q  quit
+
+    Your save is a single slot. Restoring deletes it (as in the original).
+    Dying or quitting records your score.
+    Rogue is a Wick-added built-in game (not in the station command canon).

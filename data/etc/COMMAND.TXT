@@ -54,6 +54,7 @@ profile      oooooooo:oooooooo:oo-o----:oooooooo
 readprof     oooooooo:oooooooo:oo-o----:oooooooo
 talk         oooooooo:oooooooo:oo------:oooooooo
 roomlist     oooooooo:oooooooo:oo-o----:oooooooo
+rogue        oooooooo:oooooooo:oo------:oooooooo
 readnews     oooooooo:oooooooo:oo-o----:oooooooo
 postnews     --------:--------:oo------:--------
 

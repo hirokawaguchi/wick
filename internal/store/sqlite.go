@@ -130,8 +130,10 @@ CREATE TABLE IF NOT EXISTS access_logs (
 		}
 	}
 	idType := "INTEGER PRIMARY KEY AUTOINCREMENT"
+	blobType := "BLOB"
 	if s.dollar {
 		idType = "BIGSERIAL PRIMARY KEY"
+		blobType = "BYTEA"
 	}
 	_, err = s.db.Exec(`
 CREATE TABLE IF NOT EXISTS boards (
@@ -236,6 +238,22 @@ CREATE TABLE IF NOT EXISTS news_cursors (
 	last_num INTEGER NOT NULL DEFAULT 0,
 	unsub INTEGER NOT NULL DEFAULT 0,
 	UNIQUE(user_id, grp)
+);
+CREATE TABLE IF NOT EXISTS rogue_saves (
+	user_id TEXT PRIMARY KEY,
+	blob ` + blobType + ` NOT NULL,
+	updated_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS rogue_scores (
+	id ` + idType + `,
+	user_id TEXT NOT NULL,
+	handle TEXT NOT NULL,
+	gold INTEGER NOT NULL DEFAULT 0,
+	depth INTEGER NOT NULL DEFAULT 0,
+	max_depth INTEGER NOT NULL DEFAULT 0,
+	cause TEXT NOT NULL DEFAULT '',
+	won INTEGER NOT NULL DEFAULT 0,
+	scored_at INTEGER NOT NULL
 );
 `)
 	return err

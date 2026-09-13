@@ -79,6 +79,41 @@ func (s *Session) PrintNotice(n Notice) {
 	s.Print(s.noticeText(n))
 }
 
+// HoldNotices は全画面表示（rogue）中の通知保留を切り替える。false に戻すと
+// 保留は破棄せず TakeHeldNotices で取り出せる（呼び側で最後に流す想定）。
+func (s *Session) HoldNotices(hold bool) {
+	s.holdNotices = hold
+}
+
+// TakeHeldNotices は保留した通知を取り出して空にする。全画面のメッセージ行へ
+// 短く出したり、ゲーム終了後にまとめて流したりするのに使う。
+func (s *Session) TakeHeldNotices() []Notice {
+	if len(s.heldNotices) == 0 {
+		return nil
+	}
+	out := s.heldNotices
+	s.heldNotices = nil
+	return out
+}
+
+// NoticeSummary は保留通知 1 件を 1 行の短い要約にする（全画面のメッセージ行用）。
+func (s *Session) NoticeSummary(n Notice) string {
+	body := strings.TrimSpace(strings.ReplaceAll(n.Body, "\n", " "))
+	switch n.Kind {
+	case NoticeTelegram:
+		return s.T("notice.telegram_short", n.FromID, body)
+	case NoticeChat, NoticeTalk:
+		return fmt.Sprintf("%s> %s", n.FromID, body)
+	case NoticeChatJoin, NoticeTalkJoin:
+		return s.T("notice.join", n.FromID)
+	case NoticeChatLeave, NoticeTalkLeave:
+		return s.T("notice.leave", n.FromID)
+	case NoticeSystem:
+		return s.T("notice.system", body)
+	}
+	return body
+}
+
 // cols は表示に使う桁数（term_width、未設定は 80）。
 func (s *Session) cols() int {
 	if s != nil && s.User.TermWidth > 0 {
@@ -114,6 +149,11 @@ func (s *Session) FoldLine(prefix, body string) string {
 // 入力行を一度消してから通知を出し、プロンプトと打ちかけの入力を描き直す
 // （ラインモードでも入出力が読めるようにする＝A案）。エージェントや通常時は素通し。
 func (s *Session) emitNotice(n Notice) {
+	if s.holdNotices && !s.IsAgent() {
+		// 全画面表示中。画面を壊さないよう保留し、ゲーム側が取り出して出す。
+		s.heldNotices = append(s.heldNotices, n)
+		return
+	}
 	if s.inputActive && !s.IsAgent() {
 		body := strings.TrimPrefix(s.noticeText(n), "\n")
 		buf := ""

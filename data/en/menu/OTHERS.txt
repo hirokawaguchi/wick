@@ -6,4 +6,5 @@
 [5] Show access log   (log)
 [6] Read news         (readnews)
 [7] Post news         (postnews)
+[8] Rogue             (rogue)
 

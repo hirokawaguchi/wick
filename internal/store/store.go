@@ -188,6 +188,27 @@ type Store interface {
 	CountUnreadNews(ctx context.Context, userID string) (int, error)
 	UnsubscribeNews(ctx context.Context, userID, group string) error
 	NewsSubscribed(ctx context.Context, userID, group string) (bool, error)
+
+	// 内部ゲーム rogue のセーブとスコア。セーブは 1 ユーザ 1 本（原典どおり）。
+	SaveRogue(ctx context.Context, userID string, blob []byte) error
+	LoadRogue(ctx context.Context, userID string) ([]byte, error)
+	DeleteRogue(ctx context.Context, userID string) error
+	HasRogueSave(ctx context.Context, userID string) (bool, error)
+	AddRogueScore(ctx context.Context, sc RogueScore) error
+	TopRogueScores(ctx context.Context, limit int) ([]RogueScore, error)
+}
+
+// RogueScore は rogue の成績（トップ表示用）。金塊がスコア。
+type RogueScore struct {
+	ID       int64
+	UserID   string
+	Handle   string
+	Gold     int
+	Depth    int    // 死亡・生還したときの階
+	MaxDepth int    // 到達した最深階
+	Cause    string // 死因（生還は won 参照）。例「へびに殺された」
+	Won      bool   // イェンダーの魔除けを持って生還した
+	Time     time.Time
 }
 
 const (
