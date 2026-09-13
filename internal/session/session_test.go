@@ -91,6 +91,41 @@ func TestReadLineCROnly(t *testing.T) {
 	}
 }
 
+// TestReadLineNoPtyNoEcho は、pty 無しクライアント（cooked な行モード）では
+// サーバがエコーしないことを確かめる（クライアントのローカルエコーとの二重化防止）。
+func TestReadLineNoPtyNoEcho(t *testing.T) {
+	var out strings.Builder
+	s := New("t", strings.NewReader("hello\r"), &out)
+	s.SetPTY(false)
+	line, err := s.ReadLine(64)
+	if err != nil || line != "hello" {
+		t.Fatalf("got %q %v", line, err)
+	}
+	if strings.Contains(out.String(), "hello") {
+		t.Fatalf("pty 無しなのにサーバがエコーした: %q", out.String())
+	}
+}
+
+// TestEmitNoticeNoPtyPlain は、pty 無しでは ANSI 再描画をせず素通し表示に
+// なることを確かめる（cooked 端末での画面崩れ防止）。
+func TestEmitNoticeNoPtyPlain(t *testing.T) {
+	var out strings.Builder
+	s := New("t", strings.NewReader(""), &out)
+	s.SetPTY(false)
+	buf := []rune("こん")
+	s.inputActive = true
+	s.inputPrompt = "alice> "
+	s.inputBuf = &buf
+	s.emitNotice(Notice{Kind: NoticeChat, FromID: "poet", Body: "やあ"})
+	got := out.String()
+	if strings.Contains(got, "\x1b[K") {
+		t.Fatalf("pty 無しなのに再描画制御が出た: %q", got)
+	}
+	if !strings.Contains(got, "poet> やあ") {
+		t.Fatalf("通知が出ていない: %q", got)
+	}
+}
+
 func TestReadSecretNoEcho(t *testing.T) {
 	var out strings.Builder
 	s := New("t", strings.NewReader("secret\r"), &out)

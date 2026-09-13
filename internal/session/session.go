@@ -28,8 +28,8 @@ const (
 type Session struct {
 	ID      string
 	Channel string
-	Chan    int    // who と ! で使う回線番号。1 から
-	Kind    string // KindHuman / KindAgent。既定は human
+	Chan    int       // who と ! で使う回線番号。1 から
+	Kind    string    // KindHuman / KindAgent。既定は human
 	Lang    i18n.Lang // 表示言語。空は既定(ja)。ログイン時に User.Lang から設定
 	User    store.User
 	In      io.Reader
@@ -47,6 +47,13 @@ type Session struct {
 	Sequencer time.Time
 
 	notices chan Notice
+
+	// pty はクライアントに擬似端末（pty）が割り当てられているか。pty があるとき、
+	// クライアント端末は raw モード（ローカルエコー無し）なので、サーバが打鍵を
+	// エコーし、ANSI で入力行を再描画する。pty が無い（cooked な行モードの）
+	// クライアントはローカルエコーするので、サーバはエコーしない（＝二重化を防ぐ）。
+	// 既定は true。sshd が pty 無し接続を検出したら SetPTY(false) にする。
+	pty bool
 
 	// 入力中の再描画用（チャットのラインモード）。プロンプト付き読取の間だけ有効。
 	// コマンドループと同じゴルーチンからのみ触るので追加ロックは不要。
@@ -95,8 +102,17 @@ func New(channel string, in io.Reader, out io.Writer) *Session {
 		Out:       out,
 		Connected: time.Now(),
 		notices:   make(chan Notice, 16),
+		pty:       true, // 既定は pty あり（サーバエコー）。pty 無し接続は sshd が下げる
 	}
 }
+
+// SetPTY はクライアント pty の有無を設定する。false のとき、サーバは打鍵を
+// エコーせず（クライアントがローカルエコーする前提）、入力行の ANSI 再描画も
+// 行わない（cooked な行モード端末での二重表示・画面崩れを避ける）。
+func (s *Session) SetPTY(v bool) { s.pty = v }
+
+// HasPTY は pty ありかどうか。
+func (s *Session) HasPTY() bool { return s.pty }
 
 // IsAgent はエージェント（AgentIO）セッションかどうか。
 func (s *Session) IsAgent() bool { return s.Kind == KindAgent }
@@ -358,6 +374,11 @@ func (s *Session) ReadSecret(max int) (string, error) {
 func (s *Session) readLine(max int, echo bool, prompt string) (string, error) {
 	if max <= 0 {
 		max = 256
+	}
+	// pty が無いクライアント（cooked な行モード）は自分でローカルエコーするため、
+	// サーバはエコーしない（打鍵が二重に見えるのを防ぐ）。
+	if !s.pty {
+		echo = false
 	}
 	var runes []rune
 	if prompt != "" {

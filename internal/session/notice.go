@@ -154,7 +154,7 @@ func (s *Session) emitNotice(n Notice) {
 		s.heldNotices = append(s.heldNotices, n)
 		return
 	}
-	if s.inputActive && !s.IsAgent() {
+	if s.inputActive && s.pty && !s.IsAgent() {
 		body := strings.TrimPrefix(s.noticeText(n), "\n")
 		buf := ""
 		if s.inputBuf != nil {

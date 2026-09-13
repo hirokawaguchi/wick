@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gliderlabs/ssh"
 	"github.com/hirokawaguchi/wick/internal/acl"
 	"github.com/hirokawaguchi/wick/internal/assets"
 	"github.com/hirokawaguchi/wick/internal/command"
@@ -22,7 +23,6 @@ import (
 	"github.com/hirokawaguchi/wick/internal/session"
 	"github.com/hirokawaguchi/wick/internal/shell"
 	"github.com/hirokawaguchi/wick/internal/store"
-	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 
@@ -153,6 +153,11 @@ func (srv *Server) handle(sess ssh.Session) {
 	s.Lang = i18n.Normalize(u.Lang) // 表示言語（未設定は既定 ja）
 	s.ID = sess.Context().SessionID()
 	s.SetConn(sess) // kill 用に下位接続を登録
+	// pty の有無でサーバエコーを切り替える。pty 無し（cooked な行モード）の
+	// クライアントは自分でローカルエコーするので、サーバはエコーしない（二重化防止）。
+	if _, _, isPty := sess.Pty(); !isPty {
+		s.SetPTY(false)
+	}
 
 	if !srv.Host.TryEnter(s) {
 		s.Print("\n" + s.T("sshd.dup_id") + "\n")
