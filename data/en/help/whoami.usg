@@ -1,0 +1,5 @@
+whoami - your own info
+
+usage: whoami
+
+    Shows the ID, handle, privileges and so on of the logged-in user.

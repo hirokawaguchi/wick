@@ -10,13 +10,13 @@ import (
 // 送信は単独行の "."、中止は Ctrl-C。空本文・中止は ok=false（"-- 中止 --" を表示）。
 // 戻り値の本文は末尾に改行を 1 つ付ける（従来の join+"\n" と同じ）。
 func composeBody(e *Env) (string, bool, error) {
-	e.Sess.Print("本文 (矢印で移動して修正可。送信は単独行の . / 中止は Ctrl-C):\n")
+	e.Sess.Print(e.Sess.T("notes.body_prompt") + "\n")
 	text, submitted, err := e.Sess.EditText("", 500)
 	if err != nil {
 		return "", false, err
 	}
 	if !submitted || strings.TrimRight(text, "\n") == "" {
-		e.Sess.Print("-- 中止 --\n")
+		e.Sess.Print(e.Sess.T("signup.abort") + "\n")
 		return "", false, nil
 	}
 	return text + "\n", true, nil

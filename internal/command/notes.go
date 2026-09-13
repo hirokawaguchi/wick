@@ -39,7 +39,7 @@ func cmdBBSList(e *Env) error {
 		}
 		if n == 0 {
 			// 記号の意味を先頭に1行だけ添える（R=読む W=書く B=新規話題）。
-			e.Sess.Print("掲示板一覧  ( R=読む  W=書き込み  B=新規話題を立てる )\n")
+			e.Sess.Print(e.Sess.T("notes.bbslist_head") + "\n")
 		}
 		n++
 		w, bn := ' ', ' '
@@ -57,16 +57,16 @@ func cmdBBSList(e *Env) error {
 		e.Sess.Printf(" (R%c%c) %s<%s>\n", w, bn, session.PadRight(name, 30), b.Name)
 	}
 	if n == 0 {
-		e.Sess.Print("読めるボードがありません。\n")
+		e.Sess.Print(e.Sess.T("notes.no_readable") + "\n")
 	}
 	return nil
 }
 
 func cmdSetSeque(e *Env) error {
 	cur := e.Sess.Sequencer
-	e.Sess.Printf("現在の設定値 : %s\n", formatSeq(cur))
-	e.Sess.Print("変更値を入力してください。 (YYYY/MM/DD HH:MM:SS)\n")
-	e.Sess.Print("変更値       : ")
+	e.Sess.Print(e.Sess.T("notes.seq_cur_val", formatSeq(cur)) + "\n")
+	e.Sess.Print(e.Sess.T("notes.seq_input_hint") + "\n")
+	e.Sess.Print(e.Sess.T("notes.seq_input"))
 	line, err := e.Sess.ReadCommand(32)
 	if err != nil {
 		return err
@@ -80,12 +80,12 @@ func cmdSetSeque(e *Env) error {
 	} else {
 		t, err = parseSeq(line)
 		if err != nil {
-			e.Sess.Print("invalid\n")
+			e.Sess.Print(e.Sess.T("invalid") + "\n")
 			return nil
 		}
 	}
 	e.Sess.Sequencer = t
-	e.Sess.Printf("-- %s に変更しました --\n", formatSeq(t))
+	e.Sess.Print(e.Sess.T("notes.seq_changed", formatSeq(t)) + "\n")
 	return nil
 }
 
@@ -147,7 +147,7 @@ func cmdBoard(e *Env) error {
 		e.Sess.Printf("[5] write       : %s\n", fmtMask(b.Write))
 		e.Sess.Printf("[6] basenote    : %s\n", fmtMask(b.Basenote))
 		e.Sess.Printf("[7] sign        : %s\n", signPreview(b.Sign))
-		e.Sess.Print("変更する項目番号 : ")
+		e.Sess.Print(e.Sess.T("notes.board_item"))
 		line, err := e.Sess.ReadCommand(4)
 		if err != nil {
 			return err
@@ -182,28 +182,28 @@ func cmdBoard(e *Env) error {
 			b.Sign = readSign(e, b.Sign)
 		}
 	}
-	e.Sess.Print("書き込みますか [Y/n]: ")
+	e.Sess.Print(e.Sess.T("notes.board_save_q"))
 	ans, err := e.Sess.ReadCommand(8)
 	if err != nil {
 		return err
 	}
 	ans = strings.TrimSpace(strings.ToLower(ans))
 	if ans == "n" || ans == "no" {
-		e.Sess.Print("-- 破棄しました --\n")
+		e.Sess.Print(e.Sess.T("notes.discarded") + "\n")
 		return nil
 	}
 	if isNew {
 		if _, err := e.Store.CreateBoard(e.Ctx, b); err != nil {
-			e.Sess.Printf("** 書き込みに失敗しました **\n")
+			e.Sess.Print(e.Sess.T("notes.save_failed") + "\n")
 			return nil
 		}
 	} else {
 		if err := e.Store.UpdateBoard(e.Ctx, b); err != nil {
-			e.Sess.Printf("** 書き込みに失敗しました **\n")
+			e.Sess.Print(e.Sess.T("notes.save_failed") + "\n")
 			return nil
 		}
 	}
-	e.Sess.Print("-- 保存しました --\n")
+	e.Sess.Print(e.Sess.T("saved") + "\n")
 	return nil
 }
 
@@ -220,7 +220,7 @@ func signPreview(sign string) string {
 }
 
 func readSign(e *Env, cur string) string {
-	e.Sess.Print("看板を編集 (矢印で移動。送信は単独行の . / 中止は Ctrl-C / 空のまま . で消去):\n")
+	e.Sess.Print(e.Sess.T("notes.sign_edit") + "\n")
 	text, submitted, err := e.Sess.EditText(strings.TrimRight(cur, "\n"), 200)
 	if err != nil || !submitted {
 		return cur // 中止・エラーは現状維持

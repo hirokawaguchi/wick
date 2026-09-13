@@ -90,7 +90,7 @@ func Open(env *Env, args string) error {
 			seen[b.ID] = true
 			if !guided {
 				// 操作の統一ガイド（実際に開くとき一度だけ）。i=一覧 / q=抜ける / ?=ヘルプ。
-				env.Sess.Print("[ i=一覧  q=抜ける  ?=ヘルプ ]\n")
+				env.Sess.Print(env.Sess.T("notes.guide") + "\n")
 				guided = true
 			}
 			env.Sess.SetDoing("NOTE " + b.Name)
@@ -381,7 +381,7 @@ func (r *runner) indexPage(dir int) (int, error) {
 }
 
 func (r *runner) indexSearch() (int, error) {
-	r.env.Sess.Print("検索語 : ")
+	r.env.Sess.Print(r.env.Sess.T("notes.search_kw"))
 	kw, err := r.env.Sess.ReadLine(40)
 	if err != nil {
 		return 0, err
@@ -399,15 +399,15 @@ func (r *runner) indexSearch() (int, error) {
 		}
 	}
 	if len(hits) == 0 {
-		r.env.Sess.Printf("-- \"%s\" は見つかりません --\n", kw)
+		r.env.Sess.Print(r.env.Sess.T("notes.search_none", kw) + "\n")
 		return actSilent, nil
 	}
-	r.env.Sess.Printf("-- \"%s\" : %d 件 --\n", kw, len(hits))
+	r.env.Sess.Print(r.env.Sess.T("notes.search_hits", kw, len(hits)) + "\n")
 	for _, n := range hits {
 		r.env.Sess.Printf("%5d %s %-8s %s\n",
 			n.Num, n.PostTime.Format("01/02"), n.Author, n.Title)
 	}
-	r.env.Sess.Print("開く番号 (Enter で戻る) : ")
+	r.env.Sess.Print(r.env.Sess.T("notes.open_num"))
 	line, err := r.env.Sess.ReadCommand(8)
 	if err != nil {
 		return 0, err
@@ -427,8 +427,8 @@ func (r *runner) indexSearch() (int, error) {
 }
 
 func (r *runner) indexSetSeque() (int, error) {
-	r.env.Sess.Printf("現在の未読基準 : %s\n", formatSeqTime(r.boardSeq))
-	r.env.Sess.Print("この時刻以降を未読に (YYYY/MM/DD HH:MM:SS, Enter で中止) : ")
+	r.env.Sess.Print(r.env.Sess.T("notes.seq_current", formatSeqTime(r.boardSeq)) + "\n")
+	r.env.Sess.Print(r.env.Sess.T("notes.seq_prompt"))
 	line, err := r.env.Sess.ReadCommand(32)
 	if err != nil {
 		return 0, err
@@ -439,12 +439,12 @@ func (r *runner) indexSetSeque() (int, error) {
 	}
 	t, err := parseIndexTime(line)
 	if err != nil {
-		r.env.Sess.Print("invalid\n")
+		r.env.Sess.Print(r.env.Sess.T("invalid") + "\n")
 		return actSilent, nil
 	}
 	r.boardSeq = t
 	r.noteSeq = t
-	r.env.Sess.Printf("-- %s 以降を未読とします（l/TAB で回収）--\n", formatSeqTime(t))
+	r.env.Sess.Print(r.env.Sess.T("notes.seq_set", formatSeqTime(t)) + "\n")
 	return actSilent, nil
 }
 
@@ -454,10 +454,10 @@ func (r *runner) showSign() (int, error) {
 	}
 	sign := strings.TrimRight(r.board.Sign, "\n")
 	if sign == "" {
-		r.env.Sess.Print("-- 看板はありません --\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.no_sign") + "\n")
 		return actSilent, nil
 	}
-	r.env.Sess.Printf("\n=== %s の看板 ===\n", r.board.Name)
+	r.env.Sess.Print("\n" + r.env.Sess.T("notes.sign_head", r.board.Name) + "\n")
 	r.env.Sess.Print(sign)
 	r.env.Sess.Print("\n===\n")
 	return actSilent, nil
@@ -521,8 +521,7 @@ func (r *runner) dispIndex() {
 	if live > indexWindow {
 		newest := live - r.idxOff
 		oldest := newest - len(shown) + 1
-		r.env.Sess.Printf("-- %d..%d / %d  (Space=古 BS=新 =最新 *最古 f=検索 k=看板) --\n",
-			oldest, newest, live)
+		r.env.Sess.Print(r.env.Sess.T("notes.index_footer", oldest, newest, live) + "\n")
 	} else {
 		r.env.Sess.Print("-- END --\n")
 	}
@@ -551,7 +550,7 @@ func (r *runner) dispMessage() error {
 		r.showFlags(n.Flags, n.Flags)
 		r.env.Sess.Print("\n")
 		if n.Flags&store.MsgDeleted != 0 {
-			r.env.Sess.Print("** 削除されています **\n\n")
+			r.env.Sess.Print(r.env.Sess.T("notes.deleted") + "\n\n")
 			return nil
 		}
 		r.env.Sess.Printf("Title: %s\n", n.Title)
@@ -568,7 +567,7 @@ func (r *runner) dispMessage() error {
 	r.showFlags(rs.Flags, n.Flags)
 	r.env.Sess.Print("\n")
 	if rs.Flags&store.MsgDeleted != 0 {
-		r.env.Sess.Print("** 削除されています **\n\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.deleted") + "\n\n")
 		return nil
 	}
 	r.env.Sess.Printf("Title: %s\n", n.Title)
@@ -666,7 +665,7 @@ func (r *runner) dispIndexKey(c byte) (int, error) {
 	case 'w':
 		return r.postBase(0)
 	}
-	r.env.Sess.Print("[ i=一覧  q=抜ける  ?=ヘルプ ]\n")
+	r.env.Sess.Print(r.env.Sess.T("notes.guide") + "\n")
 	return actSilent, nil
 }
 
@@ -748,12 +747,12 @@ func (r *runner) dispOpenKey(c byte) (int, error) {
 	case 'w':
 		return r.postRes()
 	}
-	r.env.Sess.Print("[ i=一覧  q=抜ける  ?=ヘルプ ]\n")
+	r.env.Sess.Print(r.env.Sess.T("notes.guide") + "\n")
 	return actSilent, nil
 }
 
 func (r *runner) help(name string) (int, error) {
-	text, err := r.env.Assets.Read("help", name)
+	text, err := r.env.Assets.ReadLang(string(r.env.Sess.Lang), "help", name)
 	if err != nil {
 		r.env.Sess.Print("no help\n")
 		return actSilent, nil
@@ -763,7 +762,7 @@ func (r *runner) help(name string) (int, error) {
 }
 
 func (r *runner) gotoNote(first byte) (int, error) {
-	r.env.Sess.Print("Basenote番号 : ")
+	r.env.Sess.Print(r.env.Sess.T("notes.basenote_num"))
 	var rest string
 	var err error
 	if first >= '0' && first <= '9' {
@@ -793,7 +792,7 @@ func (r *runner) gotoNote(first byte) (int, error) {
 }
 
 func (r *runner) gotoRes(first byte) (int, error) {
-	r.env.Sess.Print("Response番号 : ")
+	r.env.Sess.Print(r.env.Sess.T("notes.response_num"))
 	r.env.Sess.Print(string(first))
 	rest, err := r.env.Sess.ReadCommand(8)
 	if err != nil {
@@ -906,7 +905,7 @@ func (r *runner) openNew() (int, error) {
 }
 
 func (r *runner) queryEnd() (int, error) {
-	r.env.Sess.Print("-- 続きなし --  (Enter/Space/>) 次レス  (l/TAB) 未読  (BS) 戻る  (^D) 終了 : ")
+	r.env.Sess.Print(r.env.Sess.T("notes.query_end"))
 	c, err := readKeyCtx(r.env)
 	if err != nil {
 		return 0, err
@@ -914,7 +913,7 @@ func (r *runner) queryEnd() (int, error) {
 	r.env.Sess.Print("\n")
 	switch c {
 	case '\n', ' ', '>':
-		r.env.Sess.Print("次のレスはありません\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.no_more_res") + "\n")
 		return actSilent, nil
 	case 'l', 'L', '\t':
 		return actNextBoard, nil
@@ -929,7 +928,7 @@ func (r *runner) queryEnd() (int, error) {
 
 func (r *runner) postBase(flags int) (int, error) {
 	if !r.board.CanBasenote(r.env.Sess.User.Flags) {
-		r.env.Sess.Print("** 書き込めません **\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.write_denied") + "\n")
 		return actSilent, nil
 	}
 	if r.maxNote() >= store.MaxNotes {
@@ -943,7 +942,7 @@ func (r *runner) postBase(flags int) (int, error) {
 	}
 	title = session.ClipWidth(strings.TrimSpace(title), store.MaxTitle)
 	if title == "" {
-		r.env.Sess.Print("-- 中止しました --\n")
+		r.env.Sess.Print(r.env.Sess.T("aborted") + "\n")
 		return actSilent, nil
 	}
 	body, ok, err := r.editBody()
@@ -951,7 +950,7 @@ func (r *runner) postBase(flags int) (int, error) {
 		return 0, err
 	}
 	if !ok {
-		r.env.Sess.Print("-- 中止しました --\n")
+		r.env.Sess.Print(r.env.Sess.T("aborted") + "\n")
 		return actSilent, nil
 	}
 	body = store.ApplyAutosign(body, r.env.Sess.User.Autosign)
@@ -977,7 +976,7 @@ func (r *runner) postBase(flags int) (int, error) {
 	r.status = modeOpen
 	r.note = n.Num
 	r.resn = 0
-	r.env.Sess.Print("-- 書き込み完了 --\n")
+	r.env.Sess.Print(r.env.Sess.T("notes.write_done") + "\n")
 	return actDisp, nil
 }
 
@@ -987,11 +986,11 @@ func (r *runner) postRes() (int, error) {
 		return actSilent, nil
 	}
 	if n.Flags&store.MsgClosed != 0 || !r.board.CanWrite(r.env.Sess.User.Flags) {
-		r.env.Sess.Print("** 書き込めません **\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.write_denied") + "\n")
 		return actSilent, nil
 	}
 	if n.Flags&store.MsgAWO != 0 && !strings.EqualFold(n.Author, r.env.Sess.User.ID) {
-		r.env.Sess.Print("** 書き込めません **\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.write_denied") + "\n")
 		return actSilent, nil
 	}
 	if n.Response >= store.MaxResponses {
@@ -1009,7 +1008,7 @@ func (r *runner) postRes() (int, error) {
 		}
 		t = strings.TrimSpace(t)
 		if t == "" {
-			r.env.Sess.Print("-- 中止しました --\n")
+			r.env.Sess.Print(r.env.Sess.T("aborted") + "\n")
 			return actSilent, nil
 		}
 		title = t
@@ -1021,7 +1020,7 @@ func (r *runner) postRes() (int, error) {
 		return 0, err
 	}
 	if !ok {
-		r.env.Sess.Print("-- 中止しました --\n")
+		r.env.Sess.Print(r.env.Sess.T("aborted") + "\n")
 		return actSilent, nil
 	}
 	body = store.ApplyAutosign(body, r.env.Sess.User.Autosign)
@@ -1043,12 +1042,12 @@ func (r *runner) postRes() (int, error) {
 	if err := r.reload(); err != nil {
 		return 0, err
 	}
-	r.env.Sess.Print("-- 書き込み完了 --\n")
+	r.env.Sess.Print(r.env.Sess.T("notes.write_done") + "\n")
 	return actSilent, nil
 }
 
 func (r *runner) editBody() (string, bool, error) {
-	r.env.Sess.Print("本文 (矢印で移動して修正可。送信は単独行の . / 中止は Ctrl-C):\n")
+	r.env.Sess.Print(r.env.Sess.T("notes.body_prompt") + "\n")
 	text, submitted, err := r.env.Sess.EditText("", 500)
 	if err != nil {
 		return "", false, err
@@ -1061,7 +1060,7 @@ func (r *runner) editBody() (string, bool, error) {
 
 func (r *runner) deleteMsg() (int, error) {
 	if r.status == modeIndex {
-		r.env.Sess.Printf("削除する番号 [%d]: ", r.note)
+		r.env.Sess.Print(r.env.Sess.T("notes.del_num", r.note))
 		line, err := r.env.Sess.ReadCommand(8)
 		if err != nil {
 			return 0, err
@@ -1070,7 +1069,7 @@ func (r *runner) deleteMsg() (int, error) {
 		if line != "" {
 			n, err := strconv.Atoi(line)
 			if err != nil || n < 1 {
-				r.env.Sess.Print("invalid\n")
+				r.env.Sess.Print(r.env.Sess.T("invalid") + "\n")
 				return actSilent, nil
 			}
 			r.note = n
@@ -1085,7 +1084,7 @@ func (r *runner) deleteMsg() (int, error) {
 	if r.resn == 0 {
 		r.env.Sess.Printf("Basenote %d: %s (%s)\n", n.Num, n.Title, n.Author)
 		if !strings.EqualFold(n.Author, r.env.Sess.User.ID) {
-			r.env.Sess.Print("** 自分の書き込みだけ削除できます **\n")
+			r.env.Sess.Print(r.env.Sess.T("notes.only_own_del") + "\n")
 			return actSilent, nil
 		}
 		return r.toggleFlag("Delete", store.MsgDeleted, false)
@@ -1096,7 +1095,7 @@ func (r *runner) deleteMsg() (int, error) {
 	}
 	r.env.Sess.Printf("Response %d: %s (%s)\n", rs.Num, rs.Title, rs.Author)
 	if !strings.EqualFold(rs.Author, r.env.Sess.User.ID) {
-		r.env.Sess.Print("** 自分の書き込みだけ削除できます **\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.only_own_del") + "\n")
 		return actSilent, nil
 	}
 	return r.toggleResFlag("Delete", store.MsgDeleted)
@@ -1113,7 +1112,7 @@ func (r *runner) toggleFlag(label string, bit int, authorOnly bool) (int, error)
 	on := n.Flags&bit != 0
 	ok, err := r.confirm(label, on)
 	if err != nil || !ok {
-		r.env.Sess.Print("-- 中止しました --\n")
+		r.env.Sess.Print(r.env.Sess.T("aborted") + "\n")
 		return actSilent, nil
 	}
 	if on {
@@ -1125,7 +1124,7 @@ func (r *runner) toggleFlag(label string, bit int, authorOnly bool) (int, error)
 		return 0, err
 	}
 	_ = r.reload()
-	r.env.Sess.Print("-- 変更しました --\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.changed") + "\n")
 	return actSilent, nil
 }
 
@@ -1141,7 +1140,7 @@ func (r *runner) toggleResFlag(label string, bit int) (int, error) {
 	on := rs.Flags&bit != 0
 	ok, err := r.confirm(label, on)
 	if err != nil || !ok {
-		r.env.Sess.Print("-- 中止しました --\n")
+		r.env.Sess.Print(r.env.Sess.T("aborted") + "\n")
 		return actSilent, nil
 	}
 	if on {
@@ -1152,16 +1151,16 @@ func (r *runner) toggleResFlag(label string, bit int) (int, error) {
 	if err := r.env.Store.UpdateResponse(r.env.Ctx, rs); err != nil {
 		return 0, err
 	}
-	r.env.Sess.Print("-- 変更しました --\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.changed") + "\n")
 	return actSilent, nil
 }
 
 func (r *runner) confirm(label string, on bool) (bool, error) {
-	q := label + " 設定しますか"
+	q := r.env.Sess.T("notes.confirm_set", label)
 	if on {
-		q = label + " 解除しますか"
+		q = r.env.Sess.T("notes.confirm_clear", label)
 	}
-	r.env.Sess.Print(q + " [Y/n]: ")
+	r.env.Sess.Print(q)
 	line, err := r.env.Sess.ReadCommand(8)
 	if err != nil {
 		return false, err
@@ -1195,9 +1194,9 @@ func (r *runner) editTitle() (int, error) {
 	if title == "" {
 		return actSilent, nil
 	}
-	ok, err := r.confirm("変更", false)
+	ok, err := r.confirm(r.env.Sess.T("notes.change_label"), false)
 	if err != nil || !ok {
-		r.env.Sess.Print("-- 中止しました --\n")
+		r.env.Sess.Print(r.env.Sess.T("aborted") + "\n")
 		return actSilent, nil
 	}
 	if r.resn == 0 {
@@ -1213,16 +1212,16 @@ func (r *runner) editTitle() (int, error) {
 		}
 	}
 	_ = r.reload()
-	r.env.Sess.Print("-- 変更しました --\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.changed") + "\n")
 	return actSilent, nil
 }
 
 func (r *runner) toggleAllUnread() (int, error) {
 	if r.oflag&oflagA != 0 {
-		r.env.Sess.Print("-- 未読設定を通常に戻しました --\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.unread_normal") + "\n")
 		r.oflag &^= oflagA
 	} else {
-		r.env.Sess.Print("-- 全メッセージを未読とします --\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.all_unread") + "\n")
 		r.oflag |= oflagA
 	}
 	return actSilent, nil
@@ -1230,10 +1229,10 @@ func (r *runner) toggleAllUnread() (int, error) {
 
 func (r *runner) toggleNoteUnread() (int, error) {
 	if r.nflag&nflagA != 0 {
-		r.env.Sess.Print("-- 未読設定を通常に戻しました --\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.unread_normal") + "\n")
 		r.nflag &^= nflagA
 	} else {
-		r.env.Sess.Print("-- このノートの全メッセージを未読とします --\n")
+		r.env.Sess.Print(r.env.Sess.T("notes.note_all_unread") + "\n")
 		r.nflag |= nflagA
 	}
 	return actSilent, nil

@@ -1,0 +1,8 @@
+lang - switch display language (Japanese / English)
+
+    usage: lang [ja|en]
+    With no argument it shows the current language and lets you pick by
+    number (1=Japanese / 2=English).
+    The setting is saved to your member record and kept across logins.
+    The English UI is currently a scaffold; untranslated text falls back
+    to Japanese.

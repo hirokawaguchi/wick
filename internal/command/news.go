@@ -123,7 +123,7 @@ func newsListHeads(e *Env, queue []store.NewsGroup) error {
 		}
 		for _, a := range arts {
 			if shown == 0 {
-				e.Sess.Print("\n[ 未読の見出し ]\n")
+				e.Sess.Print("\n" + e.Sess.T("news.unread_heads") + "\n")
 			}
 			shown++
 			e.Sess.Printf("%-16s %5d  %-8s %s\n", a.Group, a.Num, a.FromID, a.Subject)
@@ -139,14 +139,14 @@ func newsListHeads(e *Env, queue []store.NewsGroup) error {
 func printNewsGroupHeads(e *Env, group string) {
 	arts, err := e.Store.ListNewsAfter(e.Ctx, group, 0)
 	if err != nil {
-		e.Sess.Print("** 一覧を取得できません **\n")
+		e.Sess.Print(e.Sess.T("news.heads_fail") + "\n")
 		return
 	}
 	if len(arts) == 0 {
 		e.Sess.Print("No news.\n")
 		return
 	}
-	e.Sess.Printf("\n[ %s の見出し ]\n", group)
+	e.Sess.Print("\n" + e.Sess.T("news.group_heads", group) + "\n")
 	for _, a := range arts {
 		e.Sess.Printf("%5d  %-8s %s\n", a.Num, a.FromID, a.Subject)
 	}
@@ -155,7 +155,7 @@ func printNewsGroupHeads(e *Env, group string) {
 func newsReadLoop(e *Env, queue []store.NewsGroup, nonstop bool) error {
 	if !nonstop {
 		// 操作の統一ガイド（入場時に一度）。三種の場で共通: i=一覧 / q=抜ける / ?=ヘルプ。
-		e.Sess.Print("[ Enter=次  i=一覧  q=抜ける(保存)  x=保存せず  ?=ヘルプ ]\n")
+		e.Sess.Print(e.Sess.T("news.guide") + "\n")
 	}
 	// who に居場所を出す（読み終えたら元へ戻す）。
 	prevDoing := e.Sess.GetDoing()
@@ -200,7 +200,7 @@ func newsReadLoop(e *Env, queue []store.NewsGroup, nonstop bool) error {
 				if err := e.Store.UnsubscribeNews(e.Ctx, e.Sess.User.ID, g.Name); err != nil {
 					return err
 				}
-				e.Sess.Printf("-- %s を購読解除しました --\n", g.Name)
+				e.Sess.Print(e.Sess.T("news.unsubscribed", g.Name) + "\n")
 				break articles
 			case naJump:
 				progress[g.Name] = a.Num
@@ -299,7 +299,7 @@ func newsPrompt(e *Env, a store.NewsArticle) (newsAct, error) {
 			Usage(e, "readnews")
 			continue
 		default:
-			e.Sess.Print("[ Enter=次  i=一覧  q=抜ける  ?=ヘルプ ]\n")
+			e.Sess.Print(e.Sess.T("news.guide2") + "\n")
 		}
 	}
 }
@@ -308,18 +308,18 @@ func newsPrompt(e *Env, a store.NewsArticle) (newsAct, error) {
 func newsReply(e *Env, a store.NewsArticle) error {
 	to := strings.ToLower(strings.TrimSpace(a.FromID))
 	if to == "" {
-		e.Sess.Print("** 宛先がありません **\n")
+		e.Sess.Print(e.Sess.T("news.no_dest") + "\n")
 		return nil
 	}
 	if _, err := e.Store.GetUser(e.Ctx, to); err != nil {
-		e.Sess.Print("** 著者はいません **\n")
+		e.Sess.Print(e.Sess.T("news.no_author") + "\n")
 		return nil
 	}
 	subj := a.Subject
 	if !strings.HasPrefix(strings.ToLower(subj), "re:") {
 		subj = "Re: " + subj
 	}
-	e.Sess.Printf("題 [%s] (Ctrl-C 中止): ", subj)
+	e.Sess.Print(e.Sess.T("news.subj_re", subj))
 	line, err := e.Sess.ReadLine(store.MaxMailSubject)
 	if err != nil {
 		return err
@@ -345,7 +345,7 @@ func cmdPostnews(e *Env) error {
 	}
 	group := store.CanonicalNewsGroup(e.Args)
 	if group == "" {
-		e.Sess.Printf("グループ [%s]: ", store.DefaultNewsGroup)
+		e.Sess.Print(e.Sess.T("news.group_prompt", store.DefaultNewsGroup))
 		line, err := e.Sess.ReadCommand(32)
 		if err != nil {
 			return err
@@ -357,7 +357,7 @@ func cmdPostnews(e *Env) error {
 	}
 	if _, err := e.Store.EnsureNewsGroup(e.Ctx, group); err != nil {
 		if err == store.ErrTooManyNews {
-			e.Sess.Print("** グループが多すぎます **\n")
+			e.Sess.Print(e.Sess.T("news.too_many_groups") + "\n")
 			return nil
 		}
 		return err
@@ -375,17 +375,17 @@ func postNewsFollow(e *Env, parent store.NewsArticle) error {
 
 func postNewsNew(e *Env, group, subj string, ref int) error {
 	if subj == "" {
-		e.Sess.Print("題 (Ctrl-C 中止) : ")
+		e.Sess.Print(e.Sess.T("news.subj"))
 		line, err := e.Sess.ReadLine(store.MaxNewsSubject)
 		if err != nil {
 			return err
 		}
 		subj = strings.TrimSpace(line)
 		if subj == "" {
-			subj = "(無題)"
+			subj = e.Sess.T("news.untitled")
 		}
 	} else {
-		e.Sess.Printf("題 [%s] (Ctrl-C 中止): ", subj)
+		e.Sess.Print(e.Sess.T("news.subj_re", subj))
 		line, err := e.Sess.ReadLine(store.MaxNewsSubject)
 		if err != nil {
 			return err
@@ -415,7 +415,7 @@ func postNewsNew(e *Env, group, subj string, ref int) error {
 	if err != nil {
 		return err
 	}
-	e.Sess.Printf("-- %s:%d に投稿しました --\n", a.Group, a.Num)
+	e.Sess.Print(e.Sess.T("news.posted", a.Group, a.Num) + "\n")
 	return nil
 }
 

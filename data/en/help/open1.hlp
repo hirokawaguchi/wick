@@ -1,0 +1,21 @@
+  OPEN mode (body). This command is case-sensitive.
+
+   Command      Description
+ -------------  -------------------------------------------------------------
+  <digit>       response number
+   Space/>/Enter next message
+   BS/<         previous message
+   =            to the basenote
+   *            last response
+   j/+          next note
+   -            previous note
+   l,TAB        next unread response
+   L            next unread note
+   w            post a response
+   i            to INDEX
+   d            delete your own post (basenote / current response)
+   ! % G        Important / Close / AWO
+   q,ESC        quit
+ -------------  -------------------------------------------------------------
+             Search / sign / mail here are not implemented.
+             For external files, put a URL in the body (a note is shown).

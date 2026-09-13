@@ -9,18 +9,18 @@ import (
 func cmdRegprof(e *Env) error {
 	cur := strings.TrimRight(e.Sess.User.Profile, "\n")
 	if cur == "" {
-		e.Sess.Print("現在の公開プロフィール : (なし)\n")
+		e.Sess.Print(e.Sess.T("pprof.cur") + " " + e.Sess.T("none_paren") + "\n")
 	} else {
-		e.Sess.Print("現在の公開プロフィール :\n")
+		e.Sess.Print(e.Sess.T("pprof.cur") + "\n")
 		e.Sess.Print(cur + "\n")
 	}
-	e.Sess.Print("公開文を編集 (矢印で移動。送信は単独行の . / 中止は Ctrl-C / 空のまま . で削除):\n")
+	e.Sess.Print(e.Sess.T("pprof.edit") + "\n")
 	text, ok, err := editField(e, cur, store.MaxProfLines, 78)
 	if err != nil {
 		return err
 	}
 	if !ok {
-		e.Sess.Print("-- 変更しません --\n")
+		e.Sess.Print(e.Sess.T("unchanged") + "\n")
 		return nil
 	}
 	if err := e.Store.UpdateProfile(e.Ctx, e.Sess.User.ID, text); err != nil {
@@ -28,17 +28,17 @@ func cmdRegprof(e *Env) error {
 	}
 	e.Sess.User.Profile = text
 	if text == "" {
-		e.Sess.Print("-- プロフィールを消しました --\n")
+		e.Sess.Print(e.Sess.T("pprof.deleted") + "\n")
 		return nil
 	}
-	e.Sess.Print("-- 保存しました --\n")
+	e.Sess.Print(e.Sess.T("saved") + "\n")
 	return nil
 }
 
 func cmdProfile(e *Env) error {
 	id := strings.ToLower(strings.TrimSpace(e.Args))
 	if id == "" {
-		e.Sess.Print("ID : ")
+		e.Sess.Print(e.Sess.T("signup.id_prompt"))
 		line, err := e.Sess.ReadCommand(16)
 		if err != nil {
 			return err
@@ -51,7 +51,7 @@ func cmdProfile(e *Env) error {
 	}
 	u, err := e.Store.GetUser(e.Ctx, id)
 	if err != nil {
-		e.Sess.Print("** そのユーザーはいません **\n")
+		e.Sess.Print(e.Sess.T("mail.no_user") + "\n")
 		return nil
 	}
 	printProfile(e, u)
@@ -72,7 +72,7 @@ func cmdReadprof(e *Env) error {
 		n++
 	}
 	if n == 0 {
-		e.Sess.Print("(公開プロフィールはありません)\n")
+		e.Sess.Print(e.Sess.T("pprof.none") + "\n")
 	}
 	return nil
 }
@@ -80,7 +80,7 @@ func cmdReadprof(e *Env) error {
 func cmdSearchprof(e *Env) error {
 	kw := strings.TrimSpace(e.Args)
 	if kw == "" {
-		e.Sess.Print("キーワード : ")
+		e.Sess.Print(e.Sess.T("pprof.keyword"))
 		line, err := e.Sess.ReadLine(40)
 		if err != nil {
 			return err
@@ -88,7 +88,7 @@ func cmdSearchprof(e *Env) error {
 		kw = strings.TrimSpace(line)
 	}
 	if kw == "" {
-		e.Sess.Print("usage: searchprof [語]\n")
+		e.Sess.Print(e.Sess.T("pprof.search_usage") + "\n")
 		return nil
 	}
 	users, err := e.Store.ListUsers(e.Ctx)
@@ -105,7 +105,7 @@ func cmdSearchprof(e *Env) error {
 		n++
 	}
 	if n == 0 {
-		e.Sess.Print("ヒットなし\n")
+		e.Sess.Print(e.Sess.T("pprof.no_hit") + "\n")
 	}
 	return nil
 }
@@ -114,7 +114,7 @@ func printProfile(e *Env, u store.User) {
 	e.Sess.Printf("\n-- %s (%s) --\n", u.ID, u.Handle)
 	text := strings.TrimRight(u.Profile, "\n")
 	if text == "" {
-		e.Sess.Print("(なし)\n")
+		e.Sess.Print(e.Sess.T("none_paren") + "\n")
 		return
 	}
 	e.Sess.Print(text + "\n")

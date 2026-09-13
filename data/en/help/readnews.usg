@@ -1,0 +1,27 @@
+readnews - read topics
+
+usage: readnews [-n|-l|-c] [group]
+
+    Not notes. Shows unread items of subscribed streams in order.
+    The default group is local. topic is the same.
+
+    -n          nonstop (headline and body in a row)
+    -l          list unread headlines only (do not read)
+    -c          just whether there is unread (News. / No news.)
+
+    The three venues (notes/mail/news / chat/talk) share the same keys.
+      i  show the list (headlines of the current group)
+      q  quit (save read position; x does not save)
+      ?  help (-? also works)
+
+    empty Enter  body, or next
+    n / + / ;    next (skip the body)
+    N [group]    next group; with a name, go to that group
+    U            unsubscribe the current group (go to next group)
+    r            mail the author (subject is Re: ...)
+    x            quit; leave the read position untouched
+    f            follow-up (only for those who may post)
+
+    Unsubscription lasts until you clear the cursor by hand. Naming
+    (N group / readnews group) lets you read even while unsubscribed.
+    Post with postnews (sysop / co-sysop).

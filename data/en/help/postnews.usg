@@ -1,0 +1,10 @@
+postnews - post to topics
+
+usage: postnews [group]
+
+    New article. Subject and body. Ctrl-C aborts at any prompt.
+    In the body you can move up with the arrows to fix earlier lines.
+    Submit with a single line containing only "." .
+    The default group is local. A missing group is created here.
+    Only sysop / co-sysop may post.
+    Read with readnews.

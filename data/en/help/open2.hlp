@@ -1,0 +1,8 @@
+  OPEN extra keys
+
+   c / C   nonstop within note / overall
+   t / T   title list / all titles
+   e       edit title (author only)
+   I       Important list
+   a       mark this note unread
+   b       go to basenote by number

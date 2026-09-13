@@ -1,0 +1,18 @@
+chat - enter a chat room
+
+usage: chat [room]
+
+    Without a number it lists rooms then asks for one.
+    After entering, the prompt is your own ID (e.g. "sysop> "). Lines you
+    type are shown as-is as speech lines.
+
+    The three venues (chat / talk / notes/mail/news) share the same keys.
+    In speaking venues (chat / talk) you prefix with "/".
+      /i  show the list (rooms)  * empty Enter also redraws
+      /q  leave (. / q also work)
+      /?  help (/help also works)
+
+    /who shows occupants. /title changes the title.
+    /! <id> <body> sends a private telegram without leaving the room
+    (a bare ! inside a room is speech).
+    /e toggles echoback (reflect your own line after sending; off by default).

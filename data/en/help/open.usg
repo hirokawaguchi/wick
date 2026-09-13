@@ -1,0 +1,19 @@
+open - open a note file
+
+usage: open [-sxna@] <wildcard>
+
+    -s  open only boards that have unread items
+    -x  open unread notes in OPEN mode
+    -n  nonstop
+    -a  disable "skip if not updated"
+    -@  show scan completed/aborted
+
+    With just an argument it shows the INDEX. INDEX lists 20 at a time
+    (newest number first). Space for older page, BS for newer page,
+    = for latest, * for oldest. Open older notes by number. Unread scan
+    is new or open -s. f searches title/body then opens by number.
+    A marks "since a time" as unread, k shows the board sign.
+    Basenotes and responses go up to 9999 each (4-digit display).
+    In INDEX: w = basenote, l = unread, q = quit, Enter opens the current
+    note, v redraws the list. In OPEN: w = response, digits = response
+    number, i = INDEX.

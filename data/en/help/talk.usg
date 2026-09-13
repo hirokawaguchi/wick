@@ -1,0 +1,29 @@
+talk - line conference
+
+usage: talk [-n] [room]
+
+    Without a number it lists rooms then asks for one.
+    At the room prompt "<room> TALK>", empty Enter redraws the list.
+    . aborts / leaves.
+    -n  visits rooms with unread and shows them in a row.
+    talk N enters a room. The log is kept. This is separate from chat.
+
+    In a room, each line is written to the log and streamed to occupants
+    (when you have a seat).
+
+    The three venues (chat / talk / notes/mail/news) share the same keys.
+    In speaking venues (chat / talk) you prefix with "/".
+      /i  show the list (rooms)  * empty Enter also redraws
+      /q  leave (. / q also work)
+      /?  help (/help also works)
+
+    /who     seats and knocks
+    /title   title (leader)
+    /open /close /lock  open/close (leader)
+    /knock   ask for a seat
+    /seat id grant a seat (leader)
+    /kick id remove (leader)
+    /ra      show all lines (asks to confirm when many)
+
+    In-room keys are Wick-specific (the "/" command style). We will align
+    once the original talk -? is available.

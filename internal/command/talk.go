@@ -16,7 +16,7 @@ import (
 func cmdTalk(e *Env) error {
 	scan, num, ok := parseTalkArgs(e.Args)
 	if !ok {
-		e.Sess.Print("usage: talk [-n] [部屋番号]\n")
+		e.Sess.Print(e.Sess.T("talk.usage") + "\n")
 		return nil
 	}
 	if err := e.Store.SeedTalkRooms(e.Ctx); err != nil {
@@ -86,10 +86,10 @@ func talkScan(e *Env, only int) error {
 		shown++
 	}
 	if shown == 0 {
-		e.Sess.Print("-- 未読なし --\n")
+		e.Sess.Print(e.Sess.T("talk.no_unread") + "\n")
 		return nil
 	}
-	e.Sess.Print("-- talk 終わり --\n")
+	e.Sess.Print(e.Sess.T("talk.scan_end") + "\n")
 	return nil
 }
 
@@ -97,14 +97,14 @@ func enterTalkRoom(e *Env, num int) error {
 	room, err := e.Store.GetTalkRoom(e.Ctx, num)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			e.Sess.Print("** その部屋はありません **\n")
+			e.Sess.Print(e.Sess.T("talk.no_room") + "\n")
 			return nil
 		}
 		return err
 	}
 	info, err := e.Host.JoinTalk(num, room.Status, e.Sess)
 	if err != nil {
-		e.Sess.Print("** その部屋はありません **\n")
+		e.Sess.Print(e.Sess.T("talk.no_room") + "\n")
 		return nil
 	}
 	if info.Role == host.TalkSeat {
@@ -122,9 +122,9 @@ func enterTalkRoom(e *Env, num int) error {
 		}
 	}()
 
-	e.Sess.Printf("-- 入室 --  %d: %s [%s]  (%s)\n", room.Num, room.Title, store.TalkStatusName(room.Status), talkRoleName(info.Role))
+	e.Sess.Print(e.Sess.T("talk.enter", room.Num, room.Title, store.TalkStatusName(room.Status), talkRoleName(e.Sess, info.Role)) + "\n")
 	// 操作の統一ガイド（入室時に一度）。三種の場で共通: /i=一覧 / /q=退出 / /?=ヘルプ。
-	e.Sess.Print("[ /i=一覧  /q=退出  /?=ヘルプ ]  (/who /title /open /close /knock /ra)\n")
+	e.Sess.Print(e.Sess.T("talk.guide") + "\n")
 	printTalkWho(e.Sess, info)
 	if err := printRecentTalk(e, room); err != nil {
 		return err
@@ -143,7 +143,7 @@ func enterTalkRoom(e *Env, num int) error {
 			continue
 		}
 		if line == "." || line == "q" || line == "/q" {
-			e.Sess.Print("-- 退室 --\n")
+			e.Sess.Print(e.Sess.T("talk.leave") + "\n")
 			return nil
 		}
 		if strings.HasPrefix(line, "/") {
@@ -187,7 +187,7 @@ func talkSlash(e *Env, num int, line string) error {
 	case "/ra":
 		return talkReadAll(e, num)
 	default:
-		e.Sess.Print("** 不明なコマンド **  [ /i=一覧  /q=退出  /?=ヘルプ ]\n")
+		e.Sess.Print(e.Sess.T("talk.unknown") + "\n")
 		return nil
 	}
 }
@@ -198,7 +198,7 @@ func postTalkLine(e *Env, num int, body string) error {
 		return nil
 	}
 	if e.Host.TalkRole(num, e.Sess.User.ID) != host.TalkSeat {
-		e.Sess.Print("** 座席がありません。/knock してください **\n")
+		e.Sess.Print(e.Sess.T("talk.no_seat") + "\n")
 		return nil
 	}
 	ln, err := e.Store.CreateTalkLine(e.Ctx, store.TalkLine{
@@ -209,28 +209,28 @@ func postTalkLine(e *Env, num int, body string) error {
 	})
 	if err != nil {
 		if errors.Is(err, store.ErrTooManyTalkLines) {
-			e.Sess.Print("** これ以上書けません **\n")
+			e.Sess.Print(e.Sess.T("talk.too_many") + "\n")
 			return nil
 		}
 		return err
 	}
 	e.Sess.Seen(ln.PostTime)
 	if err := e.Host.SayTalk(num, e.Sess, ln); err != nil {
-		e.Sess.Print("** 送れません **\n")
+		e.Sess.Print(e.Sess.T("talk.send_fail") + "\n")
 	}
 	return nil
 }
 
 func talkKnock(e *Env, num int) error {
 	if e.Host.TalkRole(num, e.Sess.User.ID) == host.TalkSeat {
-		e.Sess.Print("-- すでに着席しています --\n")
+		e.Sess.Print(e.Sess.T("talk.already_seated") + "\n")
 		return nil
 	}
 	if err := e.Host.KnockTalk(num, e.Sess); err != nil {
-		e.Sess.Print("** ノックできません **\n")
+		e.Sess.Print(e.Sess.T("talk.knock_fail") + "\n")
 		return nil
 	}
-	e.Sess.Print("-- ノックしました --\n")
+	e.Sess.Print(e.Sess.T("talk.knocked") + "\n")
 	return nil
 }
 
@@ -245,17 +245,17 @@ func talkAdmit(e *Env, num int, id string) error {
 		return err
 	}
 	if !talkLeader(e, room) {
-		e.Sess.Print("** リーダーではありません **\n")
+		e.Sess.Print(e.Sess.T("talk.not_leader") + "\n")
 		return nil
 	}
 	if err := e.Host.AdmitTalk(num, id); err != nil {
-		e.Sess.Print("** その人はいません **\n")
+		e.Sess.Print(e.Sess.T("talk.no_person") + "\n")
 		return nil
 	}
 	if err := ensureTalkLeader(e, &room, id); err != nil {
 		return err
 	}
-	e.Sess.Printf("-- %s を着席させました --\n", id)
+	e.Sess.Print(e.Sess.T("talk.seated", id) + "\n")
 	return nil
 }
 
@@ -270,18 +270,18 @@ func talkKick(e *Env, num int, id string) error {
 		return err
 	}
 	if !talkLeader(e, room) {
-		e.Sess.Print("** リーダーではありません **\n")
+		e.Sess.Print(e.Sess.T("talk.not_leader") + "\n")
 		return nil
 	}
 	if strings.EqualFold(id, e.Sess.User.ID) {
-		e.Sess.Print("** 自分はキックできません **\n")
+		e.Sess.Print(e.Sess.T("talk.no_self_kick") + "\n")
 		return nil
 	}
 	if err := e.Host.KickTalk(num, id); err != nil {
-		e.Sess.Print("** その人はいません **\n")
+		e.Sess.Print(e.Sess.T("talk.no_person") + "\n")
 		return nil
 	}
-	e.Sess.Printf("-- %s を退席させました --\n", id)
+	e.Sess.Print(e.Sess.T("talk.kicked", id) + "\n")
 	return nil
 }
 
@@ -296,14 +296,14 @@ func talkSetTitle(e *Env, num int, title string) error {
 		return nil
 	}
 	if !talkLeader(e, room) {
-		e.Sess.Print("** リーダーではありません **\n")
+		e.Sess.Print(e.Sess.T("talk.not_leader") + "\n")
 		return nil
 	}
 	room.Title = title
 	if err := e.Store.UpdateTalkRoom(e.Ctx, room); err != nil {
 		return err
 	}
-	e.Sess.Printf("-- 題を %s にしました --\n", title)
+	e.Sess.Print(e.Sess.T("talk.title_set", title) + "\n")
 	return nil
 }
 
@@ -313,14 +313,14 @@ func talkSetStatus(e *Env, num, status int) error {
 		return err
 	}
 	if !talkLeader(e, room) {
-		e.Sess.Print("** リーダーではありません **\n")
+		e.Sess.Print(e.Sess.T("talk.not_leader") + "\n")
 		return nil
 	}
 	room.Status = status
 	if err := e.Store.UpdateTalkRoom(e.Ctx, room); err != nil {
 		return err
 	}
-	e.Sess.Printf("-- %s にしました --\n", store.TalkStatusName(status))
+	e.Sess.Print(e.Sess.T("talk.status_set", store.TalkStatusName(status)) + "\n")
 	return nil
 }
 
@@ -330,8 +330,8 @@ func talkReadAll(e *Env, num int) error {
 		return err
 	}
 	if room.LineCount > 40 {
-		e.Sess.Printf("** /ra は全件表示です (%d lines) **\n", room.LineCount)
-		e.Sess.Print("続行しますか (y/N): ")
+		e.Sess.Print(e.Sess.T("talk.ra_warn", room.LineCount) + "\n")
+		e.Sess.Print(e.Sess.T("talk.continue_q"))
 		line, err := e.Sess.ReadCommand(8)
 		if err != nil {
 			return err
@@ -345,7 +345,7 @@ func talkReadAll(e *Env, num int) error {
 		return err
 	}
 	if len(lines) == 0 {
-		e.Sess.Print("-- ログなし --\n")
+		e.Sess.Print(e.Sess.T("talk.no_log") + "\n")
 		return nil
 	}
 	for _, ln := range lines {
@@ -367,7 +367,7 @@ func printRecentTalk(e *Env, room store.TalkRoom) error {
 	if len(lines) == 0 {
 		return nil
 	}
-	e.Sess.Print("-- 直近 --\n")
+	e.Sess.Print(e.Sess.T("talk.recent") + "\n")
 	for _, ln := range lines {
 		printTalkLine(e.Sess, ln)
 		e.Sess.Seen(ln.PostTime)
@@ -439,13 +439,13 @@ func transferTalkLeader(e *Env, num int, left string, seats []string) error {
 	return e.Store.UpdateTalkRoom(e.Ctx, room)
 }
 
-func talkRoleName(role int) string {
+func talkRoleName(s *session.Session, role int) string {
 	switch role {
 	case host.TalkSeat:
-		return "座席"
+		return s.T("talk.role_seat")
 	case host.TalkKnock:
-		return "ノック"
+		return s.T("talk.role_knock")
 	default:
-		return "見学"
+		return s.T("talk.role_watch")
 	}
 }

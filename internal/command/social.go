@@ -20,7 +20,7 @@ func (r *Registry) registerSocial() {
 func cmdTelegram(e *Env) error {
 	to, msg := splitHead(e.Args)
 	if to == "" {
-		e.Sess.Print("宛先 : ")
+		e.Sess.Print(e.Sess.T("mail.dest"))
 		line, err := e.Sess.ReadCommand(16)
 		if err != nil {
 			return err
@@ -28,11 +28,11 @@ func cmdTelegram(e *Env) error {
 		to = strings.TrimSpace(line)
 	}
 	if to == "" {
-		e.Sess.Print("usage: ! <id|チャネル> <message>\n")
+		e.Sess.Print(e.Sess.T("social.tg_usage") + "\n")
 		return nil
 	}
 	if msg == "" {
-		e.Sess.Print("本文 : ")
+		e.Sess.Print(e.Sess.T("social.body_prompt"))
 		line, err := e.Sess.ReadLine(session.TelegramMax)
 		if err != nil {
 			return err
@@ -41,17 +41,17 @@ func cmdTelegram(e *Env) error {
 	}
 	if err := e.Host.SendTelegram(to, e.Sess, msg); err != nil {
 		if errors.Is(err, host.ErrNoChannel) {
-			e.Sess.Print("** そのチャネルには誰もいません **\n")
+			e.Sess.Print(e.Sess.T("social.no_channel") + "\n")
 			return nil
 		}
 		if errors.Is(err, host.ErrOffline) {
-			e.Sess.Print("** そのユーザーはオンラインではありません **\n")
+			e.Sess.Print(e.Sess.T("social.offline") + "\n")
 			return nil
 		}
-		e.Sess.Print("** 送れません **\n")
+		e.Sess.Print(e.Sess.T("talk.send_fail") + "\n")
 		return nil
 	}
-	e.Sess.Print("-- 送信しました --\n")
+	e.Sess.Print(e.Sess.T("social.sent") + "\n")
 	return nil
 }
 
@@ -61,7 +61,7 @@ func cmdChat(e *Env) error {
 	if arg != "" {
 		n, err := strconv.Atoi(session.FoldCommand(arg))
 		if err != nil || n < 1 {
-			e.Sess.Print("usage: chat [部屋番号]\n")
+			e.Sess.Print(e.Sess.T("social.chat_usage") + "\n")
 			return nil
 		}
 		num = n
@@ -77,7 +77,7 @@ func cmdChat(e *Env) error {
 	}
 	info, err := e.Host.JoinChat(num, e.Sess)
 	if err != nil {
-		e.Sess.Print("** その部屋はありません **\n")
+		e.Sess.Print(e.Sess.T("talk.no_room") + "\n")
 		return nil
 	}
 	prev := e.Sess.GetDoing()
@@ -86,7 +86,7 @@ func cmdChat(e *Env) error {
 		e.Host.LeaveChat(e.Sess.User.ID)
 		e.Sess.SetDoing(prev)
 	}()
-	e.Sess.Printf("-- 入室 --  %d: %s  [ /i=一覧  /q=退出  /?=ヘルプ ]  (/who /title /! id 本文 /e)\n", info.Num, info.Title)
+	e.Sess.Print(e.Sess.T("social.chat_enter", info.Num, info.Title) + "\n")
 	if len(info.Members) > 0 {
 		e.Sess.Printf("online: %s\n", strings.Join(info.Members, " "))
 	}
@@ -105,7 +105,7 @@ func cmdChat(e *Env) error {
 			continue
 		}
 		if line == "." || line == "q" || line == "/q" {
-			e.Sess.Print("-- 退室 --\n")
+			e.Sess.Print(e.Sess.T("talk.leave") + "\n")
 			return nil
 		}
 		if line == "/i" {
@@ -130,21 +130,21 @@ func cmdChat(e *Env) error {
 			// 部屋を出ずに個人電報を送る（部屋内では素の "!" は発言になるため）。
 			to, msg := splitHead(strings.TrimSpace(line[2:]))
 			if to == "" || msg == "" {
-				e.Sess.Print("usage: /! <id> <本文>\n")
+				e.Sess.Print(e.Sess.T("social.tg_room_usage") + "\n")
 				continue
 			}
 			if err := e.Host.SendTelegram(to, e.Sess, msg); err != nil {
 				switch {
 				case errors.Is(err, host.ErrNoChannel):
-					e.Sess.Print("** そのチャネルには誰もいません **\n")
+					e.Sess.Print(e.Sess.T("social.no_channel") + "\n")
 				case errors.Is(err, host.ErrOffline):
-					e.Sess.Print("** そのユーザーはオンラインではありません **\n")
+					e.Sess.Print(e.Sess.T("social.offline") + "\n")
 				default:
-					e.Sess.Print("** 送れません **\n")
+					e.Sess.Print(e.Sess.T("talk.send_fail") + "\n")
 				}
 				continue
 			}
-			e.Sess.Print("-- 送信しました --\n")
+			e.Sess.Print(e.Sess.T("social.sent") + "\n")
 			continue
 		}
 		if line == "/who" || strings.HasPrefix(line, "/who ") {
@@ -160,18 +160,18 @@ func cmdChat(e *Env) error {
 		if strings.HasPrefix(line, "/title") {
 			title := strings.TrimSpace(strings.TrimPrefix(line, "/title"))
 			if title == "" {
-				e.Sess.Print("usage: /title <題>\n")
+				e.Sess.Print(e.Sess.T("social.title_usage") + "\n")
 				continue
 			}
 			if err := e.Host.SetChatTitle(num, title); err != nil {
-				e.Sess.Print("** 変更できません **\n")
+				e.Sess.Print(e.Sess.T("social.cant_change") + "\n")
 				continue
 			}
-			e.Sess.Printf("-- 題を %s にしました --\n", session.ClipWidth(title, store.MaxTitle))
+			e.Sess.Print(e.Sess.T("talk.title_set", session.ClipWidth(title, store.MaxTitle)) + "\n")
 			continue
 		}
 		if err := e.Host.SayChat(num, e.Sess, line); err != nil {
-			e.Sess.Print("** 送れません **\n")
+			e.Sess.Print(e.Sess.T("talk.send_fail") + "\n")
 			return nil
 		}
 		if echo {
@@ -186,7 +186,7 @@ func pickRoomNum(e *Env, list func(*Env) error) (int, bool, error) {
 		if err := list(e); err != nil {
 			return 0, false, err
 		}
-		e.Sess.Print("部屋番号 (Enter=再表示  .=中止): ")
+		e.Sess.Print(e.Sess.T("social.room_prompt"))
 		line, err := e.Sess.ReadCommand(8)
 		if err != nil {
 			return 0, false, err
@@ -200,7 +200,7 @@ func pickRoomNum(e *Env, list func(*Env) error) (int, bool, error) {
 		}
 		n, err := strconv.Atoi(line)
 		if err != nil || n < 1 {
-			e.Sess.Print("invalid\n")
+			e.Sess.Print(e.Sess.T("invalid") + "\n")
 			continue
 		}
 		return n, true, nil

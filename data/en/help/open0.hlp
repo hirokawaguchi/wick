@@ -1,0 +1,28 @@
+  This command is case-sensitive.
+
+   Command      Description
+ -------------  -------------------------------------------------------------
+  <digit key>   select a basenote
+   ^R           toggle "add response title"
+   [?]          show this file
+   [%]          close the note
+   [a]          mark all messages unread
+   [d]          delete your own basenote (asks for number)
+   [g]          write an Author Write Only note
+   [l],TAB      show basenotes that have unread responses
+   [q],ESC      quit the index screen
+   [i]          redraw the list (INDEX)  * i = list across all screens
+   [v],^L       redraw the index screen
+   [w]          write a basenote
+   <Space>      to the older 20
+   <BS>         to the newer 20
+   [=]          to the latest page
+   [*]          to the oldest page
+   [f]          search title/body, then open by number
+   [A]          ask a time, mark everything after it unread
+   [k]          show this board's sign
+ -------------  -------------------------------------------------------------
+             INDEX shows 20 at a time. Page with Space / BS / = / *.
+             Unread scan is new / open -s, or [l].
+             Edit the sign via board (sys/cos) [7] sign.
+             For external files, put a URL in the body (a note is shown).

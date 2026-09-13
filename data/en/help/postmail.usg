@@ -1,0 +1,12 @@
+postmail - send mail
+
+usage: postmail [id]
+
+    Recipient, subject, body. Ctrl-C aborts at any prompt.
+    In the body you can move up with the arrows to fix earlier lines.
+    Submit with a single line containing only "." .
+    Set a signature with regsign.
+    To share an external file, put a URL in the body (this system does not
+    send or receive files).
+    * That is a download from an outside site. Do not open files whose
+      source you cannot verify.

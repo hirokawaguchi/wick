@@ -1,0 +1,13 @@
+signup - register a new account (online sign-up)
+
+usage: signup
+
+    Available only when logged in at the guest gate (guest).
+    Asks for a handle and password, and registers you as a probationary
+    member. You cannot choose your login ID; it is issued automatically
+    in order, like prd00001 (prd + a 5-digit sequence, lowercase, fixed
+    8 chars). The name shown on screen is the handle (free text, up to
+    8 full-width / 16 half-width chars).
+    After registering, note the issued ID, then disconnect and reconnect.
+    While probationary you can only read. Once sysop approves you, you can
+    post.

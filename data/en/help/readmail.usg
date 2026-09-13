@@ -1,0 +1,10 @@
+readmail - read incoming mail
+
+usage: readmail
+
+    Lists your inbox. Read by number. Unread is marked *.
+
+    The three venues (notes/mail/news / chat/talk) share the same keys.
+      i  show the list (dir / empty Enter also work)
+      q  quit (. also works)
+      ?  help (-? also works)
