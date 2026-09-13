@@ -1,3 +1,8 @@
+# プロジェクト名を固定。これで `-f deploy/docker-compose.yml` でも
+# リポジトリ直下の `docker compose up`（compose.yaml の include 経由）でも
+# 同じプロジェクト `wick`（同じボリューム）を使う。
+name: wick
+
 services:
   wick:
     build:

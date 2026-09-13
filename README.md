@@ -39,7 +39,7 @@ in through the *same* command loop and the *same* permissions as humans.
 ## Quick start (Docker)
 
 ```bash
-docker compose -f deploy/docker-compose.yml up --build -d
+docker compose up --build -d    # runs deploy/docker-compose.yml via ./compose.yaml
 ssh -p 2222 alice@127.0.0.1     # password: wick
 ```
 

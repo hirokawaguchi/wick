@@ -27,14 +27,16 @@ SSH 専用のテキスト BBS「Wick」を、インストールから運用ま�
 ## 2. 最短で動かす（Docker）
 
 ```bash
-docker compose -f deploy/docker-compose.yml up --build -d
+docker compose up --build -d       # リポジトリ直下の compose.yaml（実体は deploy/docker-compose.yml）
 ssh -p 2222 alice@127.0.0.1        # パスワード: wick
 ```
 
-- 初回は DB（SQLite）と SSH ホスト鍵が Docker ボリューム `wick-data`（コンテナ内
+- 直下の `compose.yaml` は `deploy/docker-compose.yml` を `include` した薄い入口です。
+  プロジェクト名は `wick` に固定してあるので、`docker compose -f deploy/docker-compose.yml …`
+  と直下 `docker compose …` はどちらも**同じスタック（同じボリューム）**を指します。
+- 初回は DB（SQLite）と SSH ホスト鍵が Docker ボリューム `wick_wick-data`（コンテナ内
   `/data`）に作られます。
-- 停止は `docker compose -f deploy/docker-compose.yml stop`、
-  破棄（データも消す）は `docker compose -f deploy/docker-compose.yml down -v`。
+- 停止は `docker compose stop`、破棄（データも消す）は `docker compose down -v`。
 
 > ホスト鍵はボリュームに保存されるので、`down -v` で消すと次回接続時に SSH の
 > ホスト鍵警告が出ます。固定したい場合は「7. データの場所」を参照。
@@ -272,9 +274,9 @@ Docker で動かす場合、コンテナからホストの Ollama へは `host.d
 
 ```bash
 # 既定のまま起動（endpoint=http://host.docker.internal:11434/v1, model=deepseek-v4-flash:cloud）
-docker compose -f deploy/docker-compose.yml up -d
+docker compose up -d
 # 別モデルに変えるなら
-WICK_AGENT_MODEL=llama3.1 docker compose -f deploy/docker-compose.yml up -d
+WICK_AGENT_MODEL=llama3.1 docker compose up -d
 ```
 
 ### 例 B: クラウド／自ホストの任意の OpenAI 互換 API を使う
@@ -293,7 +295,7 @@ WICK_DATA=data WICK_LISTEN=:2222 ./bin/wick
 WICK_AGENT_MODEL_ENDPOINT=https://api.example.com/v1 \
 WICK_AGENT_MODEL=gpt-4o-mini \
 WICK_AGENT_MODEL_KEY=sk-xxxx \
-docker compose -f deploy/docker-compose.yml up -d
+docker compose up -d
 ```
 
 起動ログに `agents: N 体登録, model=...` が出れば接続できています
@@ -314,7 +316,7 @@ SearXNG を一緒に起動し、wick 側に MCP の URL とトークンを渡し
 ```bash
 WEBSEARCH_TOKEN=your-secret \
 WICK_AGENT_WEB_MCP_URL=http://websearch:8080/mcp \
-docker compose -f deploy/docker-compose.yml --profile web up -d --build
+docker compose --profile web up -d --build
 ```
 
 起動ログに `web MCP 接続: http://websearch:8080/mcp (Bearer 認証, proto=...)` が
@@ -342,17 +344,17 @@ docker compose -f deploy/docker-compose.yml --profile web up -d --build
 2. **PostgreSQL を使う**
 
    ```bash
-   docker compose -f deploy/docker-compose.yml --profile pg up -d postgres
+   docker compose --profile pg up -d postgres
    WICK_DB_DRIVER=postgres \
    WICK_PG_DSN='postgres://wick:wick@postgres:5432/wick?sslmode=disable' \
-   docker compose -f deploy/docker-compose.yml up -d
+   docker compose up -d
    ```
 
    （同梱 Postgres の既定資格情報 `wick/wick` は本番で必ず変更してください。）
 3. **タイムゾーン** は `WICK_TZ`（既定 `Asia/Tokyo`）。
 4. **自動再起動の注意**: Compose は `restart: unless-stopped`。局内 `shutdown` は
    graceful 停止しますが、Compose 下では再起動扱いになります。完全に止めるときは
-   `docker compose ... stop wick` を使ってください。
+   `docker compose stop wick` を使ってください。
 5. **ゲスト登録を止める**なら、`data/etc/COMMAND.TXT` の `signup` 権限やゲスト口の
    運用方針を見直します（見習いは既定で閲覧のみ・sysop 承認制）。
 
@@ -395,7 +397,7 @@ drain）。そのため再起動・停止でもアクセスログを取りこぼ
 
 ```bash
 # コンテナ停止＋テストデータ（DB ボリューム）も削除
-docker compose -f deploy/docker-compose.yml --profile web --profile pg down -v
+docker compose --profile web --profile pg down -v
 ```
 
 ソース実行時は `WICK_DATA`（既定 `data/`）配下の `*.db` と
@@ -426,6 +428,7 @@ go vet ./...
 ディレクトリ構成（抜粋）:
 
 ```
+compose.yaml         直下 `docker compose` 用の入口（deploy/docker-compose.yml を include）
 cmd/wick/            BBS 本体のエントリポイント
 cmd/websearch-mcp/   エージェント専用 web 検索 MCP サーバ
 internal/            sshd / session / shell / menu / command / notes / host / store / agent / mcp / websearch ...

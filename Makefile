@@ -10,7 +10,7 @@ run: build
 	WICK_DATA=data WICK_LISTEN=:2222 ./bin/wick
 
 docker-up:
-	docker compose -f deploy/docker-compose.yml up --build -d
+	docker compose up --build -d
 
 docker-down:
-	docker compose -f deploy/docker-compose.yml down
+	docker compose down
