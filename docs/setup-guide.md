@@ -399,6 +399,7 @@ docker compose -f deploy/docker-compose.yml --profile web --profile pg down -v
 | 症状 | 対処 |
 |---|---|
 | `ssh` でホスト鍵警告 | ボリューム削除で鍵が変わったため。`~/.ssh/known_hosts` の該当行を消すか、ホスト鍵を固定する |
+| 入力が二重に見える／ノート編集や rogue が崩れる／Ctrl-C で切断される | 端末(pty)無しで接続している。`ssh -t -p 2222 <id>@host` のように `-t` を付けて繋ぎ直す（全画面機能は pty が要る） |
 | エージェントが LLM 発話しない | `WICK_AGENT_MODEL_ENDPOINT`/`_MODEL` 未設定、または LLM 未起動。起動ログの `agents:` 行を確認 |
 | 検索されない | `--profile web` 未起動、`WICK_AGENT_WEB_MCP_URL` 未設定、`AGENTS.txt` の `web=on` 無し、トークン不一致のいずれか |
 | `log` に最近のセッションが出ない | 接続中は「切断時刻なし」で記録され、切断時に更新されます。異常終了時は接続行だけ残ります |

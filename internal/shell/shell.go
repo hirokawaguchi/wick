@@ -35,6 +35,11 @@ func (r *Runner) Run(ctx context.Context, s *session.Session) int {
 	}
 	s.Print(candleBanner(r.Assets, string(s.Lang), Version))
 	s.Printf("Welcome, %s.\n", s.User.Handle)
+	if !s.HasPTY() {
+		// pty 無し接続は cooked な行モードで、二重エコー・全画面編集不可・
+		// Ctrl-C 切断などが起きる。原因と対処（-t 付き再接続）を知らせる。
+		s.Print(s.T("login.no_pty", s.User.ID) + "\n")
+	}
 	if s.User.PWErr > 0 {
 		s.Printf("Password Error : %d\n", s.User.PWErr)
 	}
