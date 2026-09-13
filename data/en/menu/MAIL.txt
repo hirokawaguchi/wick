@@ -1,0 +1,10 @@
+
+[1] Send mail            (postmail)
+[2] Read mail            (readmail)
+[3] Delete mail          (deletemail)
+[4] Withdraw mail        (killmail)
+[5] Show sent log        (lookrecord)
+[6] Multi-recipient mail (multipost)
+[7] Mailbox settings     (regmbox)
+[8] Mail group settings  (reggroup)
+

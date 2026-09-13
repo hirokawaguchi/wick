@@ -1,0 +1,8 @@
+
+[1] Electronic mail     (mail)
+[2] Note files          (notes)
+[3] Setup               (setup)
+[4] Profile             (pprof)
+[5] Online commands     (others)
+[6] Log off             (off)
+[7] System              (system)

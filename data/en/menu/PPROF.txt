@@ -1,0 +1,7 @@
+
+[1] Register profile             (regprof)
+[2] Keyword search profiles      (searchpr)
+[3] Show profile by ID           (profile)
+[4] Show profiles in ID order    (readprof)
+[5] List registered users        (userlist)
+[6] Show Wick version            (version)

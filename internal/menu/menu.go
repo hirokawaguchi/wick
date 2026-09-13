@@ -27,7 +27,7 @@ type Engine struct {
 
 func (e *Engine) Enter(env *command.Env, name, param string, level int) error {
 	if level > MaxLevel {
-		env.Sess.Print("** メニュー階層が深すぎます **\n")
+		env.Sess.Print(env.Sess.T("menu.too_deep") + "\n")
 		return nil
 	}
 	name = strings.ToUpper(name)
@@ -57,7 +57,7 @@ func (e *Engine) Enter(env *command.Env, name, param string, level int) error {
 		}
 		if line == "." || line == "/" {
 			if level == 1 {
-				env.Sess.Print("-- トップメニューです --\n")
+				env.Sess.Print(env.Sess.T("menu.at_top") + "\n")
 				continue
 			}
 			if line == "/" {
@@ -86,7 +86,7 @@ func (e *Engine) multi(env *command.Env, menu, param, buf string, level int) err
 			n, _ := strconv.Atoi(word)
 			line, ok := e.menuLine(env, menu, n)
 			if !ok {
-				env.Sess.Print("no such item\n")
+				env.Sess.Print(env.Sess.T("menu.no_item") + "\n")
 				continue
 			}
 			if err := e.multi(env, menu, param, expand(line, rest), level); err != nil {
@@ -142,7 +142,7 @@ func (e *Engine) runCommand(env *command.Env, name, args string) error {
 	}
 	cmd, ok := env.ACL.LookupCommand(name)
 	if !ok {
-		env.Sess.Printf("%s: unknown command\n", name)
+		env.Sess.Print(env.Sess.T("menu.unknown_cmd", name) + "\n")
 		return nil
 	}
 	if !acl.Allowed(env.Sess.User.Flags, cmd.Allow) {
@@ -159,7 +159,7 @@ func (e *Engine) runCommand(env *command.Env, name, args string) error {
 	}
 	if errors.Is(err, session.ErrInterrupt) {
 		// コマンド実行中の Ctrl-C。今の処理を中止してメニューへ戻る。
-		env.Sess.Print("-- 中止 --\n")
+		env.Sess.Print(env.Sess.T("menu.aborted") + "\n")
 		return nil
 	}
 	return err
@@ -170,11 +170,11 @@ func (e *Engine) runCommand(env *command.Env, name, args string) error {
 func (e *Engine) helpList(env *command.Env, pref string) {
 	cmds := env.ACL.PrefixCommands(pref, env.Sess.User.Flags)
 	if len(cmds) == 0 {
-		env.Sess.Printf("%s: 該当コマンドなし\n", pref)
+		env.Sess.Print(env.Sess.T("help.none", pref) + "\n")
 		return
 	}
 	if pref == "" {
-		env.Sess.Print("コマンド一覧（詳しい使い方は  ? 名前   または  名前 -?  ）\n")
+		env.Sess.Print(env.Sess.T("help.header") + "\n")
 	}
 	for _, c := range cmds {
 		desc := command.UsageSummary(env, c.Name)

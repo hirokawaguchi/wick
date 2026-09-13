@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hirokawaguchi/wick/internal/command"
+	"github.com/hirokawaguchi/wick/internal/i18n"
 	"github.com/hirokawaguchi/wick/internal/session"
 	"github.com/hirokawaguchi/wick/internal/store"
 )
@@ -43,9 +44,13 @@ func (e *Engine) notesItems(env *command.Env, name string) []notesItem {
 		}
 	}
 
+	lang := i18n.Lang("")
+	if env.Sess != nil {
+		lang = env.Sess.Lang
+	}
 	n := strings.ToLower(strings.TrimSpace(name))
 	if n == "notes" {
-		return notesTopItems(readable, categoryNames(env))
+		return notesTopItems(readable, categoryNames(env), lang)
 	}
 	return notesCatItems(readable, n)
 }
@@ -99,7 +104,7 @@ func cmdItem(cmd, label string) notesItem {
 	}
 }
 
-func notesTopItems(boards []store.Board, names map[string]string) []notesItem {
+func notesTopItems(boards []store.Board, names map[string]string, lang i18n.Lang) []notesItem {
 	cats := map[string]bool{}
 	var loose []store.Board
 	for _, b := range boards {
@@ -131,8 +136,8 @@ func notesTopItems(boards []store.Board, names map[string]string) []notesItem {
 		out = append(out, boardLine("open "+b.Name, b.Desc, b.Name))
 	}
 	out = append(out,
-		cmdItem("new", "未読スキャン"),
-		cmdItem("bbslist", "ボード一覧"),
+		cmdItem("new", i18n.T(lang, "notes.unread_scan")),
+		cmdItem("bbslist", i18n.T(lang, "notes.board_list")),
 	)
 	return out
 }

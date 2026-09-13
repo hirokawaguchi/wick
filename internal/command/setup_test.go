@@ -44,6 +44,20 @@ func TestLangSwitch(t *testing.T) {
 	}
 }
 
+func TestEnglishMessages(t *testing.T) {
+	// EN セッションでは移行済みメッセージが英語で出る（未移行は ja フォールバック）。
+	var out strings.Builder
+	s := session.New("t", strings.NewReader(""), &out)
+	s.Lang = i18n.EN
+	e := &Env{Ctx: context.Background(), Sess: s, Args: ""}
+	if err := cmdKill(e); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "usage: kill") {
+		t.Fatalf("expected english kill usage, got %q", out.String())
+	}
+}
+
 func TestPrivateAndScanlist(t *testing.T) {
 	ctx := context.Background()
 	st, err := store.OpenSQLite(filepath.Join(t.TempDir(), "t.db"))

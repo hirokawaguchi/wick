@@ -1,0 +1,7 @@
+
+[1] Access log        (log)
+[2] Online list       (ps)
+[3] User list         (userlist)
+[4] Shutdown          (shutdown)
+[5] Disconnect (kill) (kill)
+[6] AI agents         (agent)

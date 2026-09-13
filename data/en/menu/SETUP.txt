@@ -1,0 +1,11 @@
+
+[1] Expert mode                 (expert)
+[2] Terminal settings           (terminal)
+[3] Edit scan (unread) list     (scanlist)
+[4] Change handle               (handle)
+[5] Change password             (password)
+[6] Edit member info            (private)
+[7] Adjust board read marker    (setseque)
+[8] Edit signature file         (regsign)
+[9] Display language            (lang)
+

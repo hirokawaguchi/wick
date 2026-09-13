@@ -41,9 +41,9 @@ func (r *Registry) registerBuiltins() {
 func cmdPower(e *Env) error {
 	e.Sess.Printf("Wick %s\n", Version)
 	if e.Host != nil {
-		e.Sess.Printf("起動時刻 : %s\n", e.Host.Started().Format("2006-01-02 15:04:05"))
-		e.Sess.Printf("稼働時間 : %s\n", formatUptime(e.Host.Uptime()))
-		e.Sess.Printf("在室     : %d / %d\n", e.Host.OnlineCount(), e.Host.Max())
+		e.Sess.Print(e.Sess.T("power.started", e.Host.Started().Format("2006-01-02 15:04:05")) + "\n")
+		e.Sess.Print(e.Sess.T("power.uptime", formatUptime(e.Host.Uptime())) + "\n")
+		e.Sess.Print(e.Sess.T("power.online", e.Host.OnlineCount(), e.Host.Max()) + "\n")
 	}
 	return nil
 }
@@ -67,42 +67,42 @@ func formatUptime(d time.Duration) string {
 func cmdKill(e *Env) error {
 	sel := strings.TrimSpace(e.Args)
 	if sel == "" {
-		e.Sess.Print("使い方: kill <回線番号|ID>（回線番号は who / ps で確認）\n")
+		e.Sess.Print(e.Sess.T("kill.usage") + "\n")
 		return nil
 	}
-	e.Sess.Printf("%s を切断します。よろしいですか? (y/N) : ", sel)
+	e.Sess.Print(e.Sess.T("kill.confirm", sel))
 	ans, err := e.Sess.ReadCommand(4)
 	if err != nil {
 		return err
 	}
 	if !strings.EqualFold(strings.TrimSpace(ans), "y") {
-		e.Sess.Print("-- 中止しました --\n")
+		e.Sess.Print(e.Sess.T("aborted") + "\n")
 		return nil
 	}
 	id, err := e.Host.Kill(sel, e.Sess)
 	if err != nil {
-		e.Sess.Printf("切断できません: %v\n", err)
+		e.Sess.Print(e.Sess.T("kill.fail", err) + "\n")
 		return nil
 	}
-	e.Sess.Printf("-- %s を切断しました --\n", id)
+	e.Sess.Print(e.Sess.T("kill.done", id) + "\n")
 	return nil
 }
 
 // cmdShutdown は sysop 用の graceful 停止。在室へ一斉告知してから停止を要求する。
 // ACL（COMMAND.TXT）で sys/cos のみに制限している。
 func cmdShutdown(e *Env) error {
-	e.Sess.Print("システムを停止します。よろしいですか? (y/N) : ")
+	e.Sess.Print(e.Sess.T("shutdown.confirm"))
 	ans, err := e.Sess.ReadCommand(4)
 	if err != nil {
 		return err
 	}
 	if !strings.EqualFold(strings.TrimSpace(ans), "y") {
-		e.Sess.Print("-- 中止しました --\n")
+		e.Sess.Print(e.Sess.T("aborted") + "\n")
 		return nil
 	}
 	msg := strings.TrimSpace(e.Args)
 	if msg == "" {
-		msg = "まもなくシステムを停止します。"
+		msg = e.Sess.T("shutdown.default")
 	}
 	if e.Host != nil {
 		e.Host.Broadcast(session.Notice{
@@ -114,7 +114,7 @@ func cmdShutdown(e *Env) error {
 		})
 		e.Host.RequestShutdown()
 	}
-	e.Sess.Print("-- 停止を要求しました --\n")
+	e.Sess.Print(e.Sess.T("shutdown.reqd") + "\n")
 	return ErrLogOff
 }
 
@@ -128,7 +128,7 @@ func cmdVersion(e *Env) error {
 func cmdWhoami(e *Env) error {
 	text, err := e.Assets.ReadLang(string(e.Sess.Lang), "text", "whoami.txt")
 	if err != nil {
-		e.Sess.Printf("You are logged in as %s (%s).\n", e.Sess.User.ID, e.Sess.User.Handle)
+		e.Sess.Print(e.Sess.T("whoami.fallback", e.Sess.User.ID, e.Sess.User.Handle) + "\n")
 		return nil
 	}
 	e.Sess.Print(text)
@@ -170,10 +170,10 @@ func cmdWho(e *Env) error {
 }
 
 func cmdExpert(e *Env) error {
-	e.Sess.Printf("expert now = %d (0=beginner, 1=normal, 2=expert)\n", e.Sess.User.Expert)
+	e.Sess.Print(e.Sess.T("expert.now", e.Sess.User.Expert) + "\n")
 	line := strings.TrimSpace(e.Args)
 	if line == "" {
-		e.Sess.Print("new value: ")
+		e.Sess.Print(e.Sess.T("prompt.newval"))
 		got, err := e.Sess.ReadCommand(8)
 		if err != nil {
 			return err
@@ -185,22 +185,22 @@ func cmdExpert(e *Env) error {
 	}
 	n, err := strconv.Atoi(line)
 	if err != nil || n < 0 || n > 2 {
-		e.Sess.Print("invalid\n")
+		e.Sess.Print(e.Sess.T("invalid") + "\n")
 		return nil
 	}
 	if err := e.Store.UpdateExpert(e.Ctx, e.Sess.User.ID, n); err != nil {
 		return err
 	}
 	e.Sess.User.Expert = n
-	e.Sess.Printf("expert = %d\n", n)
+	e.Sess.Print(e.Sess.T("expert.set", n) + "\n")
 	return nil
 }
 
 func cmdHandle(e *Env) error {
-	e.Sess.Printf("handle now = %s\n", e.Sess.User.Handle)
+	e.Sess.Print(e.Sess.T("handle.now", e.Sess.User.Handle) + "\n")
 	h := strings.TrimSpace(e.Args)
 	if h == "" {
-		e.Sess.Print("new handle: ")
+		e.Sess.Print(e.Sess.T("handle.new"))
 		line, err := e.Sess.ReadLine(16)
 		if err != nil {
 			return err
@@ -211,42 +211,42 @@ func cmdHandle(e *Env) error {
 		}
 	}
 	if session.DisplayWidth(h) > store.MaxHandle {
-		e.Sess.Printf("** 長すぎます（全角%d文字/半角%d文字まで） **\n", store.MaxHandle/2, store.MaxHandle)
+		e.Sess.Print(e.Sess.T("handle.toolong", store.MaxHandle/2, store.MaxHandle) + "\n")
 		return nil
 	}
 	if err := e.Store.UpdateHandle(e.Ctx, e.Sess.User.ID, h); err != nil {
 		return err
 	}
 	e.Sess.User.Handle = h
-	e.Sess.Printf("handle = %s\n", h)
+	e.Sess.Print(e.Sess.T("handle.set", h) + "\n")
 	return nil
 }
 
 func cmdPassword(e *Env) error {
-	e.Sess.Print("old password: ")
+	e.Sess.Print(e.Sess.T("pw.old"))
 	old, err := e.Sess.ReadSecret(32)
 	if err != nil {
 		return err
 	}
 	e.Sess.Print("\n")
 	if bcrypt.CompareHashAndPassword([]byte(e.Sess.User.PasswordHash), []byte(old)) != nil {
-		e.Sess.Print("mismatch\n")
+		e.Sess.Print(e.Sess.T("pw.mismatch") + "\n")
 		return nil
 	}
-	e.Sess.Print("new password: ")
+	e.Sess.Print(e.Sess.T("pw.new"))
 	n1, err := e.Sess.ReadSecret(16)
 	if err != nil {
 		return err
 	}
 	e.Sess.Print("\n")
-	e.Sess.Print("retype: ")
+	e.Sess.Print(e.Sess.T("pw.retype"))
 	n2, err := e.Sess.ReadSecret(16)
 	if err != nil {
 		return err
 	}
 	e.Sess.Print("\n")
 	if n1 == "" || n1 != n2 {
-		e.Sess.Print("not match\n")
+		e.Sess.Print(e.Sess.T("pw.notmatch") + "\n")
 		return nil
 	}
 	if err := e.Store.UpdatePassword(e.Ctx, e.Sess.User.ID, n1); err != nil {
@@ -256,22 +256,22 @@ func cmdPassword(e *Env) error {
 	if err == nil {
 		e.Sess.User.PasswordHash = u.PasswordHash
 	}
-	e.Sess.Print("password updated\n")
+	e.Sess.Print(e.Sess.T("pw.updated") + "\n")
 	return nil
 }
 
 func cmdTerminal(e *Env) error {
 	u := &e.Sess.User
-	e.Sess.Printf("width=%d height=%d color=%v prompt=%q\n", u.TermWidth, u.TermHeight, u.Esc&1 != 0, u.Prompt)
-	e.Sess.Print("width [enter=keep]: ")
+	e.Sess.Print(e.Sess.T("term.status", u.TermWidth, u.TermHeight, u.Esc&1 != 0, u.Prompt) + "\n")
+	e.Sess.Print(e.Sess.T("term.width"))
 	if v, ok := readInt(e, u.TermWidth); ok {
 		u.TermWidth = v
 	}
-	e.Sess.Print("height [enter=keep]: ")
+	e.Sess.Print(e.Sess.T("term.height"))
 	if v, ok := readInt(e, u.TermHeight); ok {
 		u.TermHeight = v
 	}
-	e.Sess.Print("color 0/1 [enter=keep]: ")
+	e.Sess.Print(e.Sess.T("term.color"))
 	if v, ok := readInt(e, u.Esc&1); ok {
 		if v != 0 {
 			u.Esc |= 1
@@ -279,14 +279,14 @@ func cmdTerminal(e *Env) error {
 			u.Esc &^= 1
 		}
 	}
-	e.Sess.Print("prompt [enter=keep]: ")
+	e.Sess.Print(e.Sess.T("term.prompt"))
 	if line, err := e.Sess.ReadLine(20); err == nil {
 		if p := strings.TrimRight(line, "\n"); p != "" {
 			u.Prompt = p
 		}
 	}
 	_ = e.Store.UpdateTerminal(e.Ctx, u.ID, u.TermWidth, u.TermHeight, u.Esc, u.Prompt)
-	e.Sess.Print("saved\n")
+	e.Sess.Print(e.Sess.T("term.saved") + "\n")
 	return nil
 }
 
@@ -356,9 +356,9 @@ func PromptOf(u store.User, menu string) string {
 }
 
 func Usage(e *Env, name string) {
-	text, err := e.Assets.Read("help", name+".usg")
+	text, err := e.Assets.ReadLang(string(e.Sess.Lang), "help", name+".usg")
 	if err != nil {
-		e.Sess.Printf("%s: no usage\n", name)
+		e.Sess.Print(e.Sess.T("cmd.no_usage", name) + "\n")
 		return
 	}
 	e.Sess.Print(text)
@@ -383,11 +383,11 @@ func UsageSummary(e *Env, name string) string {
 }
 
 func Later(e *Env, name string) error {
-	e.Sess.Printf("%s: まだ実装されていません\n", name)
+	e.Sess.Print(e.Sess.T("cmd.unimplemented", name) + "\n")
 	return nil
 }
 
 func Denied(e *Env, name string) error {
-	e.Sess.Printf("%s: permission denied\n", name)
+	e.Sess.Print(e.Sess.T("cmd.denied", name) + "\n")
 	return ErrDenied
 }

@@ -53,13 +53,13 @@ func cmdLang(e *Env) error {
 func cmdPrivate(e *Env) error {
 	u := &e.Sess.User
 	for {
-		e.Sess.Print("\n  会員票（他の利用者には見えません）\n")
-		e.Sess.Printf("[1] 本名     : %s\n", dash(u.RealName))
-		e.Sess.Printf("[2] 生年月日 : %s\n", dash(u.Birthday))
-		e.Sess.Printf("[3] 住所     : %s\n", dash(u.Address))
-		e.Sess.Printf("[4] 電話     : %s\n", dash(u.Phone))
-		e.Sess.Printf("[5] 備考     : %s\n", dash(u.Comment))
-		e.Sess.Print("変更する項目番号 (Enter=保存): ")
+		e.Sess.Print("\n" + e.Sess.T("priv.header") + "\n")
+		e.Sess.Printf("[1] %s : %s\n", e.Sess.T("priv.f.name"), dashT(e, u.RealName))
+		e.Sess.Printf("[2] %s : %s\n", e.Sess.T("priv.f.birth"), dashT(e, u.Birthday))
+		e.Sess.Printf("[3] %s : %s\n", e.Sess.T("priv.f.addr"), dashT(e, u.Address))
+		e.Sess.Printf("[4] %s : %s\n", e.Sess.T("priv.f.phone"), dashT(e, u.Phone))
+		e.Sess.Printf("[5] %s : %s\n", e.Sess.T("priv.f.comment"), dashT(e, u.Comment))
+		e.Sess.Print(e.Sess.T("priv.pick"))
 		line, err := e.Sess.ReadCommand(4)
 		if err != nil {
 			return err
@@ -70,57 +70,57 @@ func cmdPrivate(e *Env) error {
 		}
 		switch line {
 		case "1":
-			e.Sess.Print("本名 : ")
+			e.Sess.Print(e.Sess.T("priv.f.name") + " : ")
 			if v, err := e.Sess.ReadLine(32); err == nil {
 				u.RealName = strings.TrimSpace(v)
 			}
 		case "2":
-			e.Sess.Print("生年月日 (YYYY/MM/DD) : ")
+			e.Sess.Print(e.Sess.T("priv.birthfmt"))
 			if v, err := e.Sess.ReadCommand(16); err == nil {
 				v = strings.TrimSpace(v)
 				if v != "" && !validBirthday(v) {
-					e.Sess.Print("invalid\n")
+					e.Sess.Print(e.Sess.T("invalid") + "\n")
 					continue
 				}
 				u.Birthday = v
 			}
 		case "3":
-			e.Sess.Print("住所 : ")
+			e.Sess.Print(e.Sess.T("priv.f.addr") + " : ")
 			if v, err := e.Sess.ReadLine(64); err == nil {
 				u.Address = strings.TrimSpace(v)
 			}
 		case "4":
-			e.Sess.Print("電話 : ")
+			e.Sess.Print(e.Sess.T("priv.f.phone") + " : ")
 			if v, err := e.Sess.ReadLine(20); err == nil {
 				u.Phone = strings.TrimSpace(v)
 			}
 		case "5":
-			e.Sess.Print("備考 : ")
+			e.Sess.Print(e.Sess.T("priv.f.comment") + " : ")
 			if v, err := e.Sess.ReadLine(64); err == nil {
 				u.Comment = strings.TrimSpace(v)
 			}
 		default:
-			e.Sess.Print("invalid\n")
+			e.Sess.Print(e.Sess.T("invalid") + "\n")
 		}
 	}
 	if err := e.Store.UpdatePrivate(e.Ctx, u.ID, u.RealName, u.Birthday, u.Address, u.Phone, u.Comment); err != nil {
 		return err
 	}
-	e.Sess.Print("-- 保存しました --\n")
+	e.Sess.Print(e.Sess.T("saved") + "\n")
 	return nil
 }
 
 func cmdScanlist(e *Env) error {
 	items := store.ParseScanList(e.Sess.User.ScanList)
 	for {
-		e.Sess.Print("\n巡回するボード (空なら全ボード)\n")
+		e.Sess.Print("\n" + e.Sess.T("scan.title") + "\n")
 		if len(items) == 0 {
-			e.Sess.Print("  (なし = new は全ボード)\n")
+			e.Sess.Print(e.Sess.T("scan.none") + "\n")
 		}
 		for i, name := range items {
 			e.Sess.Printf("[%d] %s\n", i+1, name)
 		}
-		e.Sess.Print("追加する名前 (Enter=保存  -番号=削除): ")
+		e.Sess.Print(e.Sess.T("scan.add"))
 		line, err := e.Sess.ReadCommand(32)
 		if err != nil {
 			return err
@@ -132,14 +132,14 @@ func cmdScanlist(e *Env) error {
 		if strings.HasPrefix(line, "-") {
 			n, err := strconv.Atoi(strings.TrimPrefix(line, "-"))
 			if err != nil || n < 1 || n > len(items) {
-				e.Sess.Print("invalid\n")
+				e.Sess.Print(e.Sess.T("invalid") + "\n")
 				continue
 			}
 			items = append(items[:n-1], items[n:]...)
 			continue
 		}
 		if len(items) >= store.MaxScanList {
-			e.Sess.Print("** これ以上追加できません **\n")
+			e.Sess.Print(e.Sess.T("scan.full") + "\n")
 			continue
 		}
 		items = store.ParseScanList(strings.Join(append(items, line), "\n"))
@@ -149,25 +149,25 @@ func cmdScanlist(e *Env) error {
 		return err
 	}
 	e.Sess.User.ScanList = list
-	e.Sess.Print("-- 保存しました --\n")
+	e.Sess.Print(e.Sess.T("saved") + "\n")
 	return nil
 }
 
 func cmdRegsign(e *Env) error {
 	cur := strings.TrimRight(e.Sess.User.Autosign, "\n")
 	if cur == "" {
-		e.Sess.Print("現在の署名 : (なし)\n")
+		e.Sess.Print(e.Sess.T("sign.cur_none") + "\n")
 	} else {
-		e.Sess.Print("現在の署名 :\n")
+		e.Sess.Print(e.Sess.T("sign.cur") + "\n")
 		e.Sess.Print(cur + "\n")
 	}
-	e.Sess.Print("署名を編集 (矢印で移動。送信は単独行の . / 中止は Ctrl-C / 空のまま . で削除):\n")
+	e.Sess.Print(e.Sess.T("sign.edit") + "\n")
 	text, ok, err := editField(e, cur, 8, 78)
 	if err != nil {
 		return err
 	}
 	if !ok {
-		e.Sess.Print("-- 変更しません --\n")
+		e.Sess.Print(e.Sess.T("unchanged") + "\n")
 		return nil
 	}
 	if err := e.Store.UpdateAutosign(e.Ctx, e.Sess.User.ID, text); err != nil {
@@ -175,16 +175,17 @@ func cmdRegsign(e *Env) error {
 	}
 	e.Sess.User.Autosign = text
 	if text == "" {
-		e.Sess.Print("-- 署名を消しました --\n")
+		e.Sess.Print(e.Sess.T("sign.deleted") + "\n")
 		return nil
 	}
-	e.Sess.Print("-- 保存しました --\n")
+	e.Sess.Print(e.Sess.T("saved") + "\n")
 	return nil
 }
 
-func dash(s string) string {
+// dashT は空欄を「(なし)」相当（言語別）で表す。
+func dashT(e *Env, s string) string {
 	if s == "" {
-		return "(なし)"
+		return e.Sess.T("none_paren")
 	}
 	return s
 }
