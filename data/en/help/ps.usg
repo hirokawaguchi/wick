@@ -1,0 +1,6 @@
+ps - online list
+
+usage: ps
+
+    Lists logged-in sessions (same as who).
+    sys / cos only.

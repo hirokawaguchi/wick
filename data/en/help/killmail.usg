@@ -1,0 +1,6 @@
+killmail - withdraw sent mail
+
+usage: killmail
+
+    Withdraws a message the recipient has not read yet.
+    Number, dir, q / . .

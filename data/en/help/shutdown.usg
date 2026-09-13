@@ -1,0 +1,7 @@
+shutdown - shut down the station (sysop)
+
+usage: shutdown
+
+    Stops the station safely (sysop / co-sysop). After confirm (y/N)
+    everyone online is notified, then the server shuts down gracefully.
+    * If the container uses restart: unless-stopped, this becomes a restart.

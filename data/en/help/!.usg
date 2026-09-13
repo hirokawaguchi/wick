@@ -1,0 +1,7 @@
+! - send a telegram to someone online
+
+usage: ! <id|channel> <message>
+
+    Destination is a logged-in ID, or a channel number from who.
+    Body is up to 78 characters. It interrupts the other side's input
+    prompt. If arguments are missing, it asks for destination and body.

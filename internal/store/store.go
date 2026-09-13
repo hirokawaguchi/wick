@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"time"
+
+	"github.com/hirokawaguchi/wick/internal/i18n"
 )
 
 var (
@@ -126,7 +128,8 @@ type Store interface {
 	SeedIfEmpty(ctx context.Context, password string) error
 	SeedGuest(ctx context.Context, password string) error
 	SeedAgents(ctx context.Context, password string) error
-	SeedBoards(ctx context.Context) error
+	// SeedBoards は既定ボードを用意する。lang 省略時は基準言語(ja)。
+	SeedBoards(ctx context.Context, langs ...i18n.Lang) error
 	// SeedTopics はボードに話題ベースノート（README 相当）を用意する。
 	// ボードにノートが 1 件も無いときだけ全件作る（冪等）。
 	SeedTopics(ctx context.Context, board, author, handle string, topics []NoteSeed) error

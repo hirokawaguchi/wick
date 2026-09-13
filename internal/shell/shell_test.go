@@ -147,6 +147,44 @@ func TestUnreadMailOnLogin(t *testing.T) {
 	}
 }
 
+func TestUnreadMailOnLoginEN(t *testing.T) {
+	ctx := context.Background()
+	st, err := store.OpenSQLite(filepath.Join(t.TempDir(), "t.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = st.Close() })
+	if err := st.SeedIfEmpty(ctx, "wick"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.SendMail(ctx, store.Mail{
+		FromID: "alice", FromHandle: "Alice", ToID: "bob",
+		Subject: "hi", Body: "hello\n", Saved: true,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	as, tbl := loadAssets(t)
+	in := strings.NewReader("off\r\n")
+	var out strings.Builder
+	s := session.New("t", in, &out)
+	u, err := st.GetUser(ctx, "bob")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.User = u
+	s.User.Expert = 1
+	s.Lang = "en"
+	h := host.New(10)
+	h.TryEnter(s)
+	r := &Runner{Host: h, Store: st, ACL: tbl, Assets: as}
+	if code := r.Run(ctx, s); code != reason.LogOff {
+		t.Fatalf("code %d out=%q", code, out.String())
+	}
+	if !strings.Contains(out.String(), "You have 1 unread mail") {
+		t.Fatalf("en unread missing: %q", out.String())
+	}
+}
+
 func TestGuestSignupLoop(t *testing.T) {
 	ctx := context.Background()
 	st, err := store.OpenSQLite(filepath.Join(t.TempDir(), "t.db"))

@@ -322,6 +322,33 @@ var catalog = map[string]map[Lang]string{
 	"agent.col_state":    {JA: "状態", EN: "State"},
 	"agent.state_stopped": {JA: "停止", EN: "stopped"},
 	"agent.state_running": {JA: "稼働", EN: "running"},
+
+	// 通知（internal/session/notice.go）。受信者の表示言語で出す。
+	"notice.telegram": {JA: "** 電報 from %s (%s) %s **", EN: "** telegram from %s (%s) %s **"},
+	"notice.join":     {JA: "-- %s が入室 --", EN: "-- %s entered --"},
+	"notice.leave":    {JA: "-- %s が退室 --", EN: "-- %s left --"},
+	"notice.knock":    {JA: "-- %s がノック --", EN: "-- %s knocked --"},
+	"notice.admit":    {JA: "-- %s が着席 --", EN: "-- %s seated --"},
+	"notice.system":   {JA: "** システム: %s **", EN: "** system: %s **"},
+
+	// ログイン直後・ゲスト口（internal/shell）
+	"login.unread_mail": {JA: "メールが %d 通あります。", EN: "You have %d unread mail message(s)."},
+	"login.unread_news": {JA: "ニュースが %d 本あります。", EN: "You have %d unread news article(s)."},
+	"guest.menu":        {JA: "[1] 新規登録 (signup)\n[2] 終了     (off)\n", EN: "[1] Sign up (signup)\n[2] Quit     (off)\n"},
+	"guest.only":        {JA: "使えるのは signup と off だけです。", EN: "Only signup and off are available."},
+
+	// SSH（認証前バナー・重複ログイン・停止告知）
+	"sshd.banner":   {JA: "Wick\n初めての方は ID に guest（パスワード guest）で入り、signup で登録してください。\n会員の方はご自分の ID でログインを。\n", EN: "Wick\nNew here? Log in as guest (password: guest) and run signup to register.\nMembers, please log in with your own ID.\n"},
+	"sshd.dup_id":   {JA: "## 使用中ID ##", EN: "## ID in use ##"},
+	"sshd.stopping": {JA: "局を停止します。切断します。", EN: "The station is shutting down. Disconnecting."},
+
+	// who / power / kill / 外部リンク警告 / ? の別名行
+	"who.kind_human":    {JA: "人", EN: "human"},
+	"power.uptime_days": {JA: "%d日 %02d:%02d:%02d", EN: "%dd %02d:%02d:%02d"},
+	"host.killed":       {JA: "sysop により切断されました。", EN: "Disconnected by sysop."},
+	"warn.external":     {JA: "※ 外部サイトからのDLです。提供元を確認できないファイルは開かないでください。", EN: "* External download. Do not open files from an unverified source."},
+	"help.alias":        {JA: "%s（%s の別名）", EN: "%s (alias of %s)"},
+	"help.alias_only":   {JA: "%s の別名", EN: "alias of %s"},
 }
 
 // T は lang のメッセージを引く。args があれば fmt.Sprintf にかける。

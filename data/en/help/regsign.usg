@@ -1,0 +1,8 @@
+regsign - edit posting signature
+
+usage: regsign
+
+    Signature appended to base notes and responses.
+    The current signature opens as-is; move with the arrows to edit.
+    Submit with "." on its own line; empty then "." deletes; Ctrl-C aborts.
+    Up to 8 lines, 78 characters per line.

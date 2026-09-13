@@ -127,7 +127,7 @@ func (h *Host) Kill(sel string, from *session.Session) (string, error) {
 		Kind:   session.NoticeSystem,
 		FromID: fromID,
 		Time:   time.Now(),
-		Body:   "sysop により切断されました。",
+		Body:   dst.T("host.killed"),
 	})
 	id := dst.User.ID
 	dst.Close()

@@ -1,0 +1,9 @@
+regprof - register a public profile
+
+usage: regprof
+
+    Text other users can see with profile / readprof / searchprof.
+    The real name and address on the private member card are not shown.
+    The current public text opens as-is; move with the arrows to edit.
+    Submit with "." on its own line; empty then "." deletes; Ctrl-C aborts.
+    Up to 16 lines, 78 characters per line.

@@ -1,0 +1,6 @@
+roomlist - line-conference room list
+
+usage: roomlist
+
+    Shows each room's open/closed state, current line, occupancy, and title.
+    Enter with talk N.

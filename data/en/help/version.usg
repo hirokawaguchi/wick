@@ -1,0 +1,5 @@
+version - show version
+
+usage: version
+
+    Shows the system version.

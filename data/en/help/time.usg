@@ -1,0 +1,5 @@
+time - current time
+
+usage: time
+
+    Shows the host's current time.

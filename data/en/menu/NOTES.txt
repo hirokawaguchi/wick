@@ -1,0 +1,4 @@
+
+[1] junk             (junk.*)
+[2] unread scan      (new)
+[3] board list       (bbslist)

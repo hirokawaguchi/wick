@@ -5,6 +5,9 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/hirokawaguchi/wick/internal/i18n"
 )
 
 // TestEmitNoticeRedraw は、人間がプロンプト付きで入力中に着信すると、
@@ -179,5 +182,23 @@ func TestPrintCRLF(t *testing.T) {
 	s.Print("a\nb\n")
 	if out.String() != "a\r\nb\r\n" {
 		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestNoticeTextLang(t *testing.T) {
+	when := time.Date(2026, 9, 13, 12, 0, 0, 0, time.Local)
+	n := Notice{Kind: NoticeTelegram, FromID: "alice", Handle: "Alice", Time: when, Body: "hi"}
+	ja := New("t", strings.NewReader(""), io.Discard)
+	if got := ja.noticeText(n); !strings.Contains(got, "電報 from alice") {
+		t.Fatalf("ja telegram: %q", got)
+	}
+	en := New("t", strings.NewReader(""), io.Discard)
+	en.Lang = i18n.EN
+	if got := en.noticeText(n); !strings.Contains(got, "telegram from alice") {
+		t.Fatalf("en telegram: %q", got)
+	}
+	join := Notice{Kind: NoticeChatJoin, FromID: "bob"}
+	if got := en.noticeText(join); !strings.Contains(got, "bob entered") {
+		t.Fatalf("en join: %q", got)
 	}
 }

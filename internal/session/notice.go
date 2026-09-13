@@ -133,26 +133,26 @@ func (s *Session) noticeText(n Notice) string {
 	switch n.Kind {
 	case NoticeTelegram:
 		when := n.Time.Format("15:04:05")
-		head := fmt.Sprintf("\n** 電報 from %s (%s) %s **\n", n.FromID, n.Handle, when)
+		head := "\n" + s.T("notice.telegram", n.FromID, n.Handle, when) + "\n"
 		return head + s.FoldLine("", n.Body)
 	case NoticeChat:
 		return "\n" + s.FoldLine(fmt.Sprintf("%s> ", n.FromID), n.Body)
 	case NoticeChatJoin:
-		return fmt.Sprintf("\n-- %s が入室 --\n", n.FromID)
+		return "\n" + s.T("notice.join", n.FromID) + "\n"
 	case NoticeChatLeave:
-		return fmt.Sprintf("\n-- %s が退室 --\n", n.FromID)
+		return "\n" + s.T("notice.leave", n.FromID) + "\n"
 	case NoticeTalk:
 		return "\n" + s.FoldLine(fmt.Sprintf("%4d %s> ", n.Line, n.FromID), n.Body)
 	case NoticeTalkJoin:
-		return fmt.Sprintf("\n-- %s が入室 --\n", n.FromID)
+		return "\n" + s.T("notice.join", n.FromID) + "\n"
 	case NoticeTalkLeave:
-		return fmt.Sprintf("\n-- %s が退室 --\n", n.FromID)
+		return "\n" + s.T("notice.leave", n.FromID) + "\n"
 	case NoticeTalkKnock:
-		return fmt.Sprintf("\n-- %s がノック --\n", n.FromID)
+		return "\n" + s.T("notice.knock", n.FromID) + "\n"
 	case NoticeTalkAdmit:
-		return fmt.Sprintf("\n-- %s が着席 --\n", n.FromID)
+		return "\n" + s.T("notice.admit", n.FromID) + "\n"
 	case NoticeSystem:
-		return fmt.Sprintf("\n** システム: %s **\n", n.Body)
+		return "\n" + s.T("notice.system", n.Body) + "\n"
 	}
 	return ""
 }

@@ -1,0 +1,7 @@
+scanlist - edit the board scan list
+
+usage: scanlist
+
+    Limits which boards new / open -s * will visit.
+    An empty list means all boards. Wildcards are allowed (junk.*).
+    Add by name, delete with -N, save with a blank line.

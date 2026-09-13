@@ -1,0 +1,7 @@
+regmbox - mailbox settings
+
+usage: regmbox [on|off]
+
+    Whether to keep a sent copy in lookreco. Default is on.
+    Delivery still happens when copies are off. Unread mail can be
+    withdrawn with killmail.

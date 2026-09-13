@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hirokawaguchi/wick/internal/acl"
+	"github.com/hirokawaguchi/wick/internal/i18n"
 	"github.com/hirokawaguchi/wick/internal/session"
 	"github.com/hirokawaguchi/wick/internal/store"
 	"golang.org/x/crypto/bcrypt"
@@ -42,13 +43,13 @@ func cmdPower(e *Env) error {
 	e.Sess.Printf("Wick %s\n", Version)
 	if e.Host != nil {
 		e.Sess.Print(e.Sess.T("power.started", e.Host.Started().Format("2006-01-02 15:04:05")) + "\n")
-		e.Sess.Print(e.Sess.T("power.uptime", formatUptime(e.Host.Uptime())) + "\n")
+		e.Sess.Print(e.Sess.T("power.uptime", formatUptime(e.Host.Uptime(), e.Sess.Lang)) + "\n")
 		e.Sess.Print(e.Sess.T("power.online", e.Host.OnlineCount(), e.Host.Max()) + "\n")
 	}
 	return nil
 }
 
-func formatUptime(d time.Duration) string {
+func formatUptime(d time.Duration, lang i18n.Lang) string {
 	if d < 0 {
 		d = 0
 	}
@@ -58,7 +59,7 @@ func formatUptime(d time.Duration) string {
 	m := (total % 3600) / 60
 	s := total % 60
 	if days > 0 {
-		return fmt.Sprintf("%d日 %02d:%02d:%02d", days, h, m, s)
+		return i18n.T(lang, "power.uptime_days", days, h, m, s)
 	}
 	return fmt.Sprintf("%02d:%02d:%02d", h, m, s)
 }
@@ -156,7 +157,7 @@ func cmdWho(e *Env) error {
 		session.PadRight("Type", 6),
 		"Menu")
 	for _, o := range e.Host.Who() {
-		kind := "人"
+		kind := e.Sess.T("who.kind_human")
 		if o.Agent {
 			kind = "AI"
 		}
@@ -367,7 +368,11 @@ func Usage(e *Env, name string) {
 // UsageSummary は help/<name>.usg の 1 行目「name - 説明」から説明部分を返す。
 // usg が無い／書式が違うときは空文字。簡易ヘルプ（?）の一覧に添える。
 func UsageSummary(e *Env, name string) string {
-	text, err := e.Assets.Read("help", name+".usg")
+	lang := ""
+	if e.Sess != nil {
+		lang = string(e.Sess.Lang)
+	}
+	text, err := e.Assets.ReadLang(lang, "help", name+".usg")
 	if err != nil {
 		return ""
 	}

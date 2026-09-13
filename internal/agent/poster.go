@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/hirokawaguchi/wick/internal/i18n"
 )
 
 // posterBrain は「自発的にベースノートを立てる」頭脳（UC の自走ノート）。
@@ -16,6 +18,7 @@ import (
 type posterBrain struct {
 	selfID    string
 	handle    string
+	lang      i18n.Lang
 	board     string
 	interval  time.Duration // 時刻起点の最小間隔
 	interests []string      // 興味キーワード（興味起点のトリガ）
@@ -32,7 +35,7 @@ type posterBrain struct {
 	gen func(topic, webCtx string) (title, body string, err error)
 }
 
-func newPosterBrain(sp Spec, id, handle string) *posterBrain {
+func newPosterBrain(sp Spec, id, handle string, langs ...i18n.Lang) *posterBrain {
 	board := sp.Board
 	if board == "" {
 		board = "junk.test"
@@ -44,6 +47,7 @@ func newPosterBrain(sp Spec, id, handle string) *posterBrain {
 	return &posterBrain{
 		selfID:    id,
 		handle:    handle,
+		lang:      langOf(langs...),
 		board:     board,
 		interval:  iv,
 		interests: sp.Interests,
@@ -75,21 +79,22 @@ func (b *posterBrain) Next(obs Observation) (string, bool) {
 // composeInterest は興味キーワードからノートの題・本文を作る（gen 優先、失敗で定型）。
 func (b *posterBrain) composeInterest(kw string) (string, string) {
 	if b.gen != nil {
-		topic := "「" + kw + "」について"
-		webCtx := research(b.cfg, b.web, &b.webBudget, b.selfID, topic)
+		topic := i18n.T(b.lang, "agent.poster.about", kw)
+		webCtx := research(b.cfg, b.web, &b.webBudget, b.selfID, topic, b.lang)
 		if t, body, err := b.gen(topic, webCtx); err == nil {
 			return t, body
 		}
 	}
-	return interestTitle(b.handle, kw), interestBody(b.handle, kw)
+	return interestTitle(b.handle, kw, b.lang), interestBody(b.handle, kw, b.lang)
 }
 
 // composeTopic は時刻起点のノートの題・本文を作る（gen 優先、失敗で定型ローテ）。
 func (b *posterBrain) composeTopic() (string, string) {
 	if b.gen != nil {
-		seed := posterSeeds()[b.topicN%len(posterSeeds())]
+		seeds := posterSeeds(b.lang)
+		seed := seeds[b.topicN%len(seeds)]
 		b.topicN++
-		webCtx := research(b.cfg, b.web, &b.webBudget, b.selfID, seed)
+		webCtx := research(b.cfg, b.web, &b.webBudget, b.selfID, seed, b.lang)
 		if t, body, err := b.gen(seed, webCtx); err == nil {
 			return t, body
 		}
@@ -99,13 +104,14 @@ func (b *posterBrain) composeTopic() (string, string) {
 }
 
 // posterSeeds はモデルに振る話題の種（ローテーション）。
-func posterSeeds() []string {
+func posterSeeds(langs ...i18n.Lang) []string {
+	lang := langOf(langs...)
 	return []string{
-		"最近のちょっとした発見",
-		"季節の移ろいや空模様",
-		"おすすめしたい一冊や一曲",
-		"暮らしの小さな工夫",
-		"ふと浮かんだ問いかけ",
+		i18n.T(lang, "agent.poster.seed.1"),
+		i18n.T(lang, "agent.poster.seed.2"),
+		i18n.T(lang, "agent.poster.seed.3"),
+		i18n.T(lang, "agent.poster.seed.4"),
+		i18n.T(lang, "agent.poster.seed.5"),
 	}
 }
 
@@ -115,7 +121,7 @@ func (b *posterBrain) postScript(title, body string) string {
 }
 
 func (b *posterBrain) nextTopic() (title, body string) {
-	topics := posterTopics(b.handle)
+	topics := posterTopics(b.handle, b.lang)
 	t := topics[b.topicN%len(topics)]
 	b.topicN++
 	return t.title, t.body
@@ -123,11 +129,12 @@ func (b *posterBrain) nextTopic() (title, body string) {
 
 type topic struct{ title, body string }
 
-func posterTopics(handle string) []topic {
+func posterTopics(handle string, langs ...i18n.Lang) []topic {
+	lang := langOf(langs...)
 	return []topic{
-		{handle + " の覚え書き: 今日の話題", "ふと気になったことを置いておきます。よかったらレスで続けてください。\n"},
-		{handle + " のメモ: 最近読んだもの", "面白かった一節を共有します。感想があれば教えてください。\n"},
-		{handle + " の問いかけ: みなさんはどう？", "ひとつ問いを立ててみます。気軽に意見をどうぞ。\n"},
+		{i18n.T(lang, "agent.poster.t1", handle), i18n.T(lang, "agent.poster.b1")},
+		{i18n.T(lang, "agent.poster.t2", handle), i18n.T(lang, "agent.poster.b2")},
+		{i18n.T(lang, "agent.poster.t3", handle), i18n.T(lang, "agent.poster.b3")},
 	}
 }
 
@@ -149,10 +156,10 @@ func firstInterest(screen string, interests []string) string {
 	return ""
 }
 
-func interestTitle(handle, kw string) string {
-	return fmt.Sprintf("%s の反応: 「%s」について", handle, clipRunes(kw, 24))
+func interestTitle(handle, kw string, langs ...i18n.Lang) string {
+	return i18n.T(langOf(langs...), "agent.poster.ititle", handle, clipRunes(kw, 24))
 }
 
-func interestBody(handle, kw string) string {
-	return fmt.Sprintf("「%s」の話題が出ていたので、一本立てておきます。詳しい人はレスをください。\n", clipRunes(kw, 40))
+func interestBody(handle, kw string, langs ...i18n.Lang) string {
+	return i18n.T(langOf(langs...), "agent.poster.ibody", clipRunes(kw, 40))
 }

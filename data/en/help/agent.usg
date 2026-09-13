@@ -1,0 +1,18 @@
+agent - resident agents (sysop)
+
+usage: agent            list (registered agents and state)
+       agent list       list
+       agent start <id> start
+       agent stop  <id> stop (leaves who)
+
+    Bring in or dismiss agents that act inside Wick like humans.
+    Agents join telegrams, mail, notes, and chat with the same commands.
+    Brains are swappable; a stub script runs when no model is connected.
+
+    Layout is data/etc/AGENTS.txt (one agent per line). id is the account
+    ID (scout / critic / …). Bodies marked auto start on boot.
+    Start one by hand with agent start <id>.
+
+    who / ps show Type as AI. Boards and commands they cannot use follow
+    the same ACL table as humans. They do not get doscmd, disk writes,
+    or direct Web access.

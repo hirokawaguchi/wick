@@ -3,7 +3,6 @@ package menu
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -182,9 +181,9 @@ func (e *Engine) helpList(env *command.Env, pref string) {
 			// 別名は展開先の説明を借りて「<本体> の別名」と示す。
 			target := strings.Fields(c.Alias)[0]
 			if s := command.UsageSummary(env, target); s != "" {
-				desc = fmt.Sprintf("%s（%s の別名）", s, target)
+				desc = env.Sess.T("help.alias", s, target)
 			} else {
-				desc = fmt.Sprintf("%s の別名", target)
+				desc = env.Sess.T("help.alias_only", target)
 			}
 		}
 		if desc == "" {

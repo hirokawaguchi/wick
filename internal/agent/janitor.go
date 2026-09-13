@@ -21,7 +21,10 @@ const (
 )
 
 // jobConclusionMarks は「結論が書かれた」と判断するレス本文の目印。
-var jobConclusionMarks = []string{"結論", "【結論】", "まとめ:", "まとめ：", "完了しました", "以上で完了", "クローズします"}
+var jobConclusionMarks = []string{
+	"結論", "【結論】", "まとめ:", "まとめ：", "完了しました", "以上で完了", "クローズします",
+	"conclusion", "summary:", "completed", "that's all", "closing",
+}
 
 // StartJanitor は保守巡回を起動する（boot 時に main から呼ぶ）。
 // host の shutdown で止まる。テストでは呼ばず sweepJobs を直接叩く。
@@ -59,7 +62,7 @@ func (m *Manager) sweepJobs(now time.Time) {
 		}
 		n.Flags |= store.MsgClosed
 		if err := m.store.UpdateNote(ctx, n); err == nil {
-			log.Printf("agent janitor: %s #%d 「%s」を自動クローズ", jobBoardName, n.Num, n.Title)
+			log.Printf("agent janitor: closed %s #%d %q", jobBoardName, n.Num, n.Title)
 		}
 	}
 }
@@ -90,8 +93,9 @@ func jobConcluded(n store.Note, reps []store.Response, now time.Time, settle tim
 }
 
 func hasConclusionMark(body string) bool {
+	low := strings.ToLower(body)
 	for _, mk := range jobConclusionMarks {
-		if strings.Contains(body, mk) {
+		if strings.Contains(body, mk) || strings.Contains(low, strings.ToLower(mk)) {
 			return true
 		}
 	}

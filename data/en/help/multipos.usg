@@ -1,0 +1,7 @@
+multipos - broadcast mail
+
+usage: multipos <id ... | @group>
+
+    Same body to multiple recipients.
+    @groups are created with reggroup.
+    multipost is the same.

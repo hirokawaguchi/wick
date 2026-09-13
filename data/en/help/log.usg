@@ -1,0 +1,6 @@
+log - access log
+
+usage: log
+
+    Shows access records, newest first.
+    sys / cos only.

@@ -373,6 +373,10 @@ func TestLastTelegram(t *testing.T) {
 	if got := lastTelegram("** 電報 from poet (Poet) 09:31:00 **\n返信\n", "poet"); got.from != "" {
 		t.Fatalf("自分の電報を拾ってしまった: %+v", got)
 	}
+	en := lastTelegram("** telegram from alice (Alice) 09:30:00 **\nhello\n", "poet")
+	if en.from != "alice" || en.body != "hello" {
+		t.Fatalf("en parse: %+v", en)
+	}
 }
 
 // TestGenerateNote は、モデルが返す JSON からノートの題・本文を組み立て、

@@ -41,15 +41,15 @@ func (r *Runner) Run(ctx context.Context, s *session.Session) int {
 	if !s.User.Unlimited() {
 		s.Printf("Time limit: %d min\n", s.User.TLimit)
 	}
-	if text, err := r.Assets.Read("msg", "login.msg"); err == nil {
+	if text, err := r.Assets.ReadLang(string(s.Lang), "msg", "login.msg"); err == nil {
 		s.Print(expandLogin(text, s.User))
 	}
 	if r.Store != nil {
 		if n, err := r.Store.CountUnreadMail(ctx, s.User.ID); err == nil && n > 0 {
-			s.Printf("メールが %d 通あります。\n", n)
+			s.Print(s.T("login.unread_mail", n) + "\n")
 		}
 		if n, err := r.Store.CountUnreadNews(ctx, s.User.ID); err == nil && n > 0 {
-			s.Printf("ニュースが %d 本あります。\n", n)
+			s.Print(s.T("login.unread_news", n) + "\n")
 		}
 	}
 	s.Print("\n")
@@ -108,7 +108,7 @@ func isGuest(u store.User) bool {
 func (r *Runner) runGuest(ctx context.Context, env *command.Env, s *session.Session) int {
 	reg := command.NewRegistry()
 	for {
-		s.Print("\n[1] 新規登録 (signup)\n[2] 終了     (off)\n")
+		s.Print("\n" + s.T("guest.menu"))
 		s.Print("guest> ")
 		line, err := readGuestLine(ctx, s)
 		if errors.Is(err, session.ErrInterrupt) {
@@ -136,7 +136,7 @@ func (r *Runner) runGuest(ctx context.Context, env *command.Env, s *session.Sess
 		case "":
 			continue
 		default:
-			s.Print("使えるのは signup と off だけです。\n")
+			s.Print(s.T("guest.only") + "\n")
 		}
 	}
 }

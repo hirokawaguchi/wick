@@ -468,7 +468,7 @@ func printNewsBody(e *Env, a store.NewsArticle) {
 		e.Sess.Print("\n")
 	}
 	if warn.HasLink(a.Body) {
-		e.Sess.Print(warn.External + "\n")
+		e.Sess.Print(e.Sess.T("warn.external") + "\n")
 	}
 }
 

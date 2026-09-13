@@ -14,6 +14,7 @@ import (
 	"github.com/hirokawaguchi/wick/internal/assets"
 	"github.com/hirokawaguchi/wick/internal/config"
 	"github.com/hirokawaguchi/wick/internal/host"
+	"github.com/hirokawaguchi/wick/internal/i18n"
 	"github.com/hirokawaguchi/wick/internal/mcp"
 	"github.com/hirokawaguchi/wick/internal/sshd"
 	"github.com/hirokawaguchi/wick/internal/store"
@@ -50,7 +51,8 @@ func main() {
 	if err := st.SeedAgents(ctx, cfg.SeedPassword); err != nil {
 		log.Fatal(err)
 	}
-	if err := st.SeedBoards(ctx); err != nil {
+	lang := i18n.Normalize(cfg.Lang)
+	if err := st.SeedBoards(ctx, lang); err != nil {
 		log.Fatal(err)
 	}
 	if err := st.SeedTalkRooms(ctx); err != nil {
@@ -65,9 +67,9 @@ func main() {
 		for _, name := range strings.Split(rb, ",") {
 			if name = strings.TrimSpace(name); name != "" {
 				if n, err := st.DeleteBoardNotes(ctx, name); err != nil {
-					log.Printf("board %s の消去に失敗: %v", name, err)
+					log.Printf("board %s: delete failed: %v", name, err)
 				} else {
-					log.Printf("board %s: %d 件のノートを消去しました", name, n)
+					log.Printf("board %s: deleted %d notes", name, n)
 				}
 			}
 		}
@@ -75,10 +77,10 @@ func main() {
 	// HyperNotes の慣習: junk.test に話題ベースノート（README 相当）を用意する。
 	// 通常の書き込みはこの話題へのレスとして積む（ベースノートは増やさない）。
 	if err := st.SeedTopics(ctx, "junk.test", "sysop", "Sysop", []store.NoteSeed{
-		{Title: "雑談", Body: "なんでも雑談する場所です。ここにレスする形で書き込んでください。\n"},
-		{Title: "本と音楽", Body: "読んだ本・聴いた音楽の話題。おすすめや感想をレスでどうぞ。\n"},
-		{Title: "日々の発見", Body: "暮らしの小さな発見を持ち寄る場所。気づきをレスで共有してください。\n"},
-		{Title: "詩と月夜", Body: "詩や情景の話題。一句でも、感想でも、レスで気軽に。\n"},
+		{Title: i18n.T(lang, "seed.topic.chat.t"), Body: i18n.T(lang, "seed.topic.chat.b")},
+		{Title: i18n.T(lang, "seed.topic.book.t"), Body: i18n.T(lang, "seed.topic.book.b")},
+		{Title: i18n.T(lang, "seed.topic.find.t"), Body: i18n.T(lang, "seed.topic.find.b")},
+		{Title: i18n.T(lang, "seed.topic.poem.t"), Body: i18n.T(lang, "seed.topic.poem.b")},
 	}); err != nil {
 		log.Fatal(err)
 	}
@@ -94,6 +96,7 @@ func main() {
 
 	// エージェント常駐（AgentIO）。AGENTS.txt を読み、auto 指定を起動する。
 	mgr := agent.NewManager(h, st, tbl, as)
+	mgr.SetLang(i18n.Normalize(cfg.Lang))
 	mgr.SetModel(agent.ModelConfig{
 		Endpoint:    cfg.AgentModelEndpoint,
 		APIKey:      cfg.AgentModelKey,
@@ -110,18 +113,18 @@ func main() {
 			if cli, err = mcp.DialTimeout(cfg.AgentWebMCPURL, cfg.AgentWebMCPToken, 10*time.Second); err == nil {
 				break
 			}
-			log.Printf("web MCP 接続待ち (%d/5): %v", attempt, err)
+			log.Printf("web MCP waiting (%d/5): %v", attempt, err)
 			time.Sleep(3 * time.Second)
 		}
 		if err != nil {
-			log.Printf("web MCP 接続失敗（スタブ継続）: %v", err)
+			log.Printf("web MCP failed (keeping stub): %v", err)
 		} else {
 			mgr.SetWebProvider(agent.NewMCPWebProvider(cli, cfg.AgentWebMCPTool, cfg.AgentWebMCPArg))
-			auth := "認証なし"
+			auth := "no auth"
 			if cfg.AgentWebMCPToken != "" {
-				auth = "Bearer 認証"
+				auth = "bearer"
 			}
-			log.Printf("web MCP 接続: %s (%s, proto=%s)", cfg.AgentWebMCPURL, auth, cli.Protocol())
+			log.Printf("web MCP connected: %s (%s, proto=%s)", cfg.AgentWebMCPURL, auth, cli.Protocol())
 		}
 	}
 	if specs, err := agent.LoadSpecs(cfg.AssetDir + "/etc/AGENTS.txt"); err != nil {
@@ -133,9 +136,9 @@ func main() {
 		mgr.StartConfigured()
 		mgr.StartJanitor() // sys.jobs の決着ジョブを定期的に自動クローズ
 		if cfg.AgentModelEndpoint != "" {
-			log.Printf("agents: %d 体登録, model=%s @ %s", len(specs), cfg.AgentModelName, cfg.AgentModelEndpoint)
+			log.Printf("agents: %d registered, model=%s @ %s", len(specs), cfg.AgentModelName, cfg.AgentModelEndpoint)
 		} else {
-			log.Printf("agents: %d 体登録（実モデル未設定＝偽頭脳）", len(specs))
+			log.Printf("agents: %d registered (no model = scripted brains)", len(specs))
 		}
 	}
 

@@ -1,0 +1,6 @@
+board - create and edit boards
+
+usage: board [name]
+
+    Edits name, description, slug, and read/write/basenote masks.
+    sys / cos only.

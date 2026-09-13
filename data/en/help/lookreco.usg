@@ -1,0 +1,7 @@
+lookreco - sent-mail copies
+
+usage: lookreco
+
+    Copies of mail you sent. Read by number.
+    Whether copies are kept is set with regmbox.
+    lookrecord is the same.

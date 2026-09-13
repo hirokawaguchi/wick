@@ -1,0 +1,6 @@
+setseque - change the sequencer
+
+usage: setseque
+
+    Changes the unread boundary time.
+    A blank line restores the saved last_msgread.

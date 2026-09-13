@@ -1,0 +1,6 @@
+handle - change handle
+
+usage: handle [handle]
+
+    Changes your handle name.
+    With an argument it changes without a prompt.

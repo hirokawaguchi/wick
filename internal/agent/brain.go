@@ -8,7 +8,17 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hirokawaguchi/wick/internal/i18n"
 )
+
+// langOf は可変長引数の先頭言語。空なら既定(ja)へフォールバックする。
+func langOf(langs ...i18n.Lang) i18n.Lang {
+	if len(langs) > 0 {
+		return langs[0]
+	}
+	return ""
+}
 
 // Observation は 1 回の心拍でエージェントが観測する情報。
 type Observation struct {
@@ -67,6 +77,7 @@ func (b *scriptedBrain) Next(Observation) (string, bool) {
 type conversantBrain struct {
 	selfID string
 	room   int
+	lang   i18n.Lang
 
 	entered      bool
 	silence      int // 連続沈黙の心拍数
@@ -84,14 +95,14 @@ func (b *conversantBrain) Next(obs Observation) (string, bool) {
 	if who, text := lastOtherUtterance(obs.Screen, b.selfID); who != "" {
 		b.silence = 0
 		b.fillerStreak = 0
-		return reactLine(who, text) + "\n", false
+		return reactLine(who, text, b.lang) + "\n", false
 	}
 	// 沈黙が続けば控えめに一言。ただし連投で埋め尽くさない。
 	b.silence++
 	if b.silence >= b.silenceLimit && b.fillerStreak < b.maxFillers {
 		b.silence = 0
 		b.fillerStreak++
-		return fillerLine(b.fillerStreak) + "\n", false
+		return fillerLine(b.fillerStreak, b.lang) + "\n", false
 	}
 	return "", false // まだ黙っている（在室のまま。心拍は進む）
 }
@@ -156,18 +167,15 @@ func clipRunes(s string, max int) string {
 	return string(r[:max])
 }
 
-func reactLine(who, text string) string {
+func reactLine(who, text string, langs ...i18n.Lang) string {
 	t := clipRunes(strings.TrimSpace(text), 24)
-	return who + " さん、「" + t + "」了解です。"
+	return i18n.T(langOf(langs...), "agent.react", who, t)
 }
 
-func fillerLine(streak int) string {
-	lines := []string{
-		"……少し静かですね。",
-		"何かあれば声かけてください。",
-		"今日は誰か来ますかね。",
-	}
-	return lines[(streak-1)%len(lines)]
+func fillerLine(streak int, langs ...i18n.Lang) string {
+	keys := []string{"agent.fill.1", "agent.fill.2", "agent.fill.3"}
+	lang := langOf(langs...)
+	return i18n.T(lang, keys[(streak-1)%len(keys)])
 }
 
 // workerBrain は sys.jobs を観測し、未着手の依頼をコマンド経路で引き受ける（UC11/UC7）。
@@ -175,6 +183,7 @@ func fillerLine(streak int) string {
 type workerBrain struct {
 	selfID       string
 	handle       string
+	lang         i18n.Lang
 	acted        map[int]bool  // このセッションで着手済みのノート番号（多重着手防止）
 	reclaimAfter time.Duration // 他者が引き受けたまま滞留したら再割り当てするまでの時間（0 で無効）
 }
@@ -198,12 +207,12 @@ func (b *workerBrain) Next(obs Observation) (string, bool) {
 				continue // まだ動いている（新鮮）。触らず次の求人へ
 			}
 			b.acted[j.Num] = true
-			body := workerReclaim(b.selfID, j.Title)
+			body := workerReclaim(b.selfID, j.Title, b.lang)
 			return fmt.Sprintf("open sys.jobs\n%d\nw\n%s\n.\nq", j.Num, body), false
 		}
 		// 未着手の依頼を引き受ける。
 		b.acted[j.Num] = true
-		body := workerReply(b.selfID, j.Title)
+		body := workerReply(b.selfID, j.Title, b.lang)
 		// open sys.jobs → 番号選択 → w(レス) → 本文 → 単独 . → q
 		return fmt.Sprintf("open sys.jobs\n%d\nw\n%s\n.\nq", j.Num, body), false
 	}
@@ -211,21 +220,22 @@ func (b *workerBrain) Next(obs Observation) (string, bool) {
 }
 
 // workerReclaim は滞留した依頼を引き取るときのレス文。
-func workerReclaim(id, title string) string {
-	return id + " が引き取ります。前の担当が止まっているようなので、続きを進めます。"
+func workerReclaim(id, title string, langs ...i18n.Lang) string {
+	return i18n.T(langOf(langs...), "agent.worker.reclaim", id)
 }
 
 // workerReply は役割（ID）に応じた引受けレスを返す。実モデルはここで実際に調べて書く。
-func workerReply(id, title string) string {
+func workerReply(id, title string, langs ...i18n.Lang) string {
+	lang := langOf(langs...)
 	switch id {
 	case "scout":
-		return "scout が引き受けます。関連ノートと事例を集めて要点をレスします。"
+		return i18n.T(lang, "agent.worker.scout")
 	case "critic":
-		return "critic が引き受けます。集まった内容の抜けや裏取りを指摘します。"
+		return i18n.T(lang, "agent.worker.critic")
 	case "writer":
-		return "writer が引き受けます。結論を読みやすく再構成します。"
+		return i18n.T(lang, "agent.worker.writer")
 	default:
-		return id + " が引き受けます。"
+		return i18n.T(lang, "agent.worker.take", id)
 	}
 }
 
@@ -239,16 +249,17 @@ func containsFold(list []string, s string) bool {
 }
 
 // buildBrain は Spec の behavior から偽頭脳を組み立てる。
-func buildBrain(sp Spec, id, handle string) Brain {
+func buildBrain(sp Spec, id, handle string, langs ...i18n.Lang) Brain {
+	lang := langOf(langs...)
 	switch sp.Behavior {
 	case "worker":
 		ra := sp.Interval
 		if ra <= 0 {
 			ra = 90 * time.Second // 既定: 90 秒滞留したら再割り当て
 		}
-		return &workerBrain{selfID: id, handle: handle, acted: map[int]bool{}, reclaimAfter: ra}
+		return &workerBrain{selfID: id, handle: handle, lang: lang, acted: map[int]bool{}, reclaimAfter: ra}
 	case "poster":
-		return newPosterBrain(sp, id, handle)
+		return newPosterBrain(sp, id, handle, lang)
 	case "conversant":
 		room := sp.Room
 		if room <= 0 {
@@ -257,6 +268,7 @@ func buildBrain(sp Spec, id, handle string) Brain {
 		return &conversantBrain{
 			selfID:       id,
 			room:         room,
+			lang:         lang,
 			silenceLimit: 3,
 			maxFillers:   3,
 		}
@@ -267,9 +279,9 @@ func buildBrain(sp Spec, id, handle string) Brain {
 		}
 		rs := strconv.Itoa(room)
 		return &scriptedBrain{steps: []string{
-			"chat " + rs + "\n",          // 入室（以後は部屋にとどまる）
-			"こんにちは。" + handle + " です。\n", // 発言
-			"今日の叩き台を置いておきます。\n",          // 発言
+			"chat " + rs + "\n", // 入室（以後は部屋にとどまる）
+			i18n.T(lang, "agent.chatter.hi", handle) + "\n",
+			i18n.T(lang, "agent.chatter.topic") + "\n",
 			".\n", // 退室
 		}}
 	default: // "greeter": 電報→メール→ノートの順に全チャネルを触る
@@ -283,11 +295,11 @@ func buildBrain(sp Spec, id, handle string) Brain {
 		}
 		return &scriptedBrain{steps: []string{
 			// 電報（MAIN で 1 行）
-			fmt.Sprintf("! %s こんにちは、%s です。\n", target, handle),
+			fmt.Sprintf("! %s %s\n", target, i18n.T(lang, "agent.greeter.tg", handle)),
 			// メール（題→本文→単独 . で送信）
-			fmt.Sprintf("postmail %s\nはじめまして\n%s と申します。よろしくお願いします。\n.\n", target, handle),
+			fmt.Sprintf("postmail %s\n%s\n%s\n.\n", target, i18n.T(lang, "agent.greeter.msubj"), i18n.T(lang, "agent.greeter.mbody", handle)),
 			// ノート（open→INDEX で w＝新規ベース→題→本文→単独 . →q で退出）
-			fmt.Sprintf("open %s\nw%s のメモ\nはじめまして。ここに調べたことを残します。\n.\nq", board, handle),
+			fmt.Sprintf("open %s\nw%s\n%s\n.\nq", board, i18n.T(lang, "agent.greeter.ntitle", handle), i18n.T(lang, "agent.greeter.nbody")),
 		}}
 	}
 }

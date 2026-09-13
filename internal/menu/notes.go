@@ -55,14 +55,19 @@ func (e *Engine) notesItems(env *command.Env, name string) []notesItem {
 	return notesCatItems(readable, n)
 }
 
-// categoryNames は data/etc/CATEGORIES.txt の「英字ID  日本語名」対応表を読む。
+// categoryNames は CATEGORIES.txt の「英字ID  表示名」対応表を読む。
+// 言語別（data/<lang>/etc/）を先に探し、無ければ基準（ja）へ落ちる。
 // 無ければ空。1 行 1 カテゴリ、# はコメント。名前は空白/タブ以降すべて。
 func categoryNames(env *command.Env) map[string]string {
 	m := map[string]string{}
 	if env == nil || env.Assets.Root == "" {
 		return m
 	}
-	text, err := env.Assets.Read("etc", "CATEGORIES.txt")
+	lang := ""
+	if env.Sess != nil {
+		lang = string(env.Sess.Lang)
+	}
+	text, err := env.Assets.ReadLang(lang, "etc", "CATEGORIES.txt")
 	if err != nil {
 		return m
 	}

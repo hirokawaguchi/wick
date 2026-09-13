@@ -598,7 +598,7 @@ func (r *runner) printMsg(author, handle string, t time.Time, body string) {
 		r.env.Sess.Print("\n")
 	}
 	if warn.HasLink(body) {
-		r.env.Sess.Print(warn.External + "\n")
+		r.env.Sess.Print(r.env.Sess.T("warn.external") + "\n")
 	}
 	r.env.Sess.Print("\n")
 }

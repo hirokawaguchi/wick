@@ -451,7 +451,7 @@ func printMail(e *Env, m store.Mail) error {
 		e.Sess.Print("\n")
 	}
 	if warn.HasLink(m.Body) {
-		e.Sess.Print(warn.External + "\n")
+		e.Sess.Print(e.Sess.T("warn.external") + "\n")
 	}
 	return nil
 }

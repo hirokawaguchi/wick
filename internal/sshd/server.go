@@ -86,7 +86,7 @@ func (srv *Server) GracefulStop(ctx context.Context) error {
 		_ = srv.ssh.Shutdown(ctx) // 新規受付を止める
 	}
 	if srv.Host != nil {
-		srv.Host.CloseHumans("局を停止します。切断します。") // 在室ハンドラを返させる
+		srv.Host.CloseHumans() // 在室へ言語別告知してハンドラを返させる
 	}
 	done := make(chan struct{})
 	go func() { srv.wg.Wait(); close(done) }()
@@ -97,12 +97,10 @@ func (srv *Server) GracefulStop(ctx context.Context) error {
 	return nil
 }
 
-// defaultBanner は banner.msg が無いときの接続前案内。
-const defaultBanner = "Wick\n初めての方は ID に guest（パスワード guest）で入り、signup で登録してください。\n会員の方はご自分の ID でログインを。\n"
-
 // banner は認証前に全接続へ出す案内。ゲスト口からの登録手順を知らせる。
 func (srv *Server) banner(ctx ssh.Context) string {
-	text := defaultBanner
+	lang := i18n.Normalize(srv.Cfg.Lang)
+	text := i18n.T(lang, "sshd.banner")
 	// 認証前なので個人設定は不明。局の既定言語（Cfg.Lang）で出す。
 	if b, err := srv.Assets.ReadLang(srv.Cfg.Lang, "msg", "banner.msg"); err == nil && strings.TrimSpace(b) != "" {
 		text = b
@@ -157,7 +155,7 @@ func (srv *Server) handle(sess ssh.Session) {
 	s.SetConn(sess) // kill 用に下位接続を登録
 
 	if !srv.Host.TryEnter(s) {
-		s.Print("\n## 使用中ID ##\n")
+		s.Print("\n" + s.T("sshd.dup_id") + "\n")
 		disc := time.Now()
 		_ = srv.Store.InsertLog(ctx, store.AccessLog{
 			UserID: u.ID, Handle: u.Handle,

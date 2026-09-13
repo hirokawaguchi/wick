@@ -1,0 +1,7 @@
+private - edit member card (personal info)
+
+usage: private
+
+    Edits real name, birthday, address, phone, and notes.
+    This does not appear in other users' who / profile.
+    A blank line saves.

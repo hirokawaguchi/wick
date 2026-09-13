@@ -13,6 +13,7 @@ import (
 	"github.com/hirokawaguchi/wick/internal/assets"
 	"github.com/hirokawaguchi/wick/internal/command"
 	"github.com/hirokawaguchi/wick/internal/host"
+	"github.com/hirokawaguchi/wick/internal/i18n"
 	"github.com/hirokawaguchi/wick/internal/store"
 )
 
@@ -41,6 +42,7 @@ type Manager struct {
 	active   map[string]*pilot
 	tempo    *tempo
 	modelCfg ModelConfig
+	lang     i18n.Lang // 局の既定言語。口座 Lang が空のとき頭脳が使う
 	// webProvider は web 検索の実体。nil ならスタブ（固定ヒット）。
 	// 将来 MCP クライアントをここに差す（SetWebProvider）。
 	webProvider WebProvider
@@ -56,6 +58,23 @@ func (m *Manager) SetModel(cfg ModelConfig) {
 	m.mu.Lock()
 	m.modelCfg = cfg
 	m.mu.Unlock()
+}
+
+// SetLang は局の既定言語を頭脳に渡す（口座 Lang が空のときのフォールバック）。
+func (m *Manager) SetLang(lang i18n.Lang) {
+	m.mu.Lock()
+	m.lang = i18n.Normalize(string(lang))
+	m.mu.Unlock()
+}
+
+// agentLang は口座の言語があればそれ、なければ局の既定。
+func (m *Manager) agentLang(u store.User) i18n.Lang {
+	if strings.TrimSpace(u.Lang) != "" {
+		return i18n.Normalize(u.Lang)
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return i18n.Normalize(string(m.lang))
 }
 
 // SetWebProvider は web 検索の実体を差し替える（既定はスタブ）。
@@ -82,7 +101,7 @@ func (m *Manager) newWebBroker() *webBroker {
 		limit:    5,
 		timeout:  8 * time.Second,
 		audit: func(id, q string, n int) {
-			log.Printf("agent %s web: %q → %d件", id, q, n)
+			log.Printf("agent %s web: %q → %d hits", id, q, n)
 		},
 	}
 	// Provider が取得（web-get）に対応していれば fetcher も差す。
@@ -119,10 +138,11 @@ func (m *Manager) buildBrainFor(sp Spec, u store.User) Brain {
 
 // buildInner は Spec に応じた本来の頭脳を作る（wander で包む前の中身）。
 func (m *Manager) buildInner(sp Spec, u store.User, cfg ModelConfig) Brain {
+	lang := m.agentLang(u)
 	switch sp.Behavior {
 	case "model":
 		if cfg.enabled() {
-			mb := newModelBrain(cfg, sp, u.ID, u.Handle)
+			mb := newModelBrain(cfg, sp, u.ID, u.Handle, lang)
 			if sp.Web || sp.WebGet {
 				mb.web = m.newWebBroker()
 				mb.webBudget = webBudgetOf(sp)
@@ -133,13 +153,13 @@ func (m *Manager) buildInner(sp Spec, u store.User, cfg ModelConfig) Brain {
 		}
 		sp2 := sp
 		sp2.Behavior = "conversant"
-		return buildBrain(sp2, u.ID, u.Handle)
+		return buildBrain(sp2, u.ID, u.Handle, lang)
 	case "poster":
-		pb := newPosterBrain(sp, u.ID, u.Handle)
+		pb := newPosterBrain(sp, u.ID, u.Handle, lang)
 		if cfg.enabled() {
 			handle := u.Handle
 			pb.gen = func(topic, webCtx string) (string, string, error) {
-				return generateNote(cfg, handle, topic, webCtx)
+				return generateNote(cfg, handle, topic, webCtx, lang)
 			}
 			if sp.Web {
 				pb.web = m.newWebBroker()
@@ -149,7 +169,7 @@ func (m *Manager) buildInner(sp Spec, u store.User, cfg ModelConfig) Brain {
 		}
 		return pb
 	case "talker":
-		tb := newTalkerBrain(cfg, sp, u.ID, u.Handle)
+		tb := newTalkerBrain(cfg, sp, u.ID, u.Handle, lang)
 		if cfg.enabled() && sp.Web {
 			tb.web = m.newWebBroker()
 			tb.webBudget = webBudgetOf(sp)
@@ -160,11 +180,11 @@ func (m *Manager) buildInner(sp Spec, u store.User, cfg ModelConfig) Brain {
 		if board == "" {
 			board = "junk.test"
 		}
-		rb := newResponderBrain(sp, u.ID, u.Handle, func() []NoteInfo { return m.noteFeed(board) })
+		rb := newResponderBrain(sp, u.ID, u.Handle, func() []NoteInfo { return m.noteFeed(board) }, lang)
 		if cfg.enabled() {
 			handle := u.Handle
 			rb.gen = func(title, intro string, recent []string, quoteHandle, quoteBody, webCtx string) (string, error) {
-				return generateResponse(cfg, handle, title, intro, recent, quoteHandle, quoteBody, webCtx)
+				return generateResponse(cfg, handle, title, intro, recent, quoteHandle, quoteBody, webCtx, lang)
 			}
 			if sp.Web {
 				rb.web = m.newWebBroker()
@@ -174,7 +194,7 @@ func (m *Manager) buildInner(sp Spec, u store.User, cfg ModelConfig) Brain {
 		}
 		return rb
 	}
-	return buildBrain(sp, u.ID, u.Handle)
+	return buildBrain(sp, u.ID, u.Handle, lang)
 }
 
 // NewManager は Manager を作る。

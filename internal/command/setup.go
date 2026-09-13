@@ -9,7 +9,7 @@ import (
 	"github.com/hirokawaguchi/wick/internal/store"
 )
 
-// cmdLang は表示言語（ja / en）を切り替える。SETUP 配下（Nouvelle 追加。正本の
+// cmdLang は表示言語（ja / en）を切り替える。SETUP 配下（Wick 追加。正本の
 // 「ずらしたもの」参照）。選んだ言語は DB に保存し、以降このセッションへ即反映する。
 // UI 文字列の翻訳は段階移行中で、未翻訳キーは自動で日本語へフォールバックする。
 func cmdLang(e *Env) error {

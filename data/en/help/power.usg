@@ -1,0 +1,6 @@
+power - station status (sysop)
+
+usage: power
+
+    Shows start time, uptime, number online, and similar status
+    (sysop / co-sysop).

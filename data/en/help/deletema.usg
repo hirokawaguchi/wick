@@ -1,0 +1,7 @@
+deletema - delete received mail
+
+usage: deletema
+
+    Deletes from the inbox (logical delete).
+    Number, dir, q / . .
+    deletemail is the same.

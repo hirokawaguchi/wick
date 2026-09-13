@@ -159,7 +159,7 @@ func (h *Host) OnlineCount() int {
 // CloseHumans は在室の人間セッションへ告知して接続を閉じる（graceful 停止用）。
 // エージェント（AgentIO）は Manager が別途止めるので対象外。コマンドループは
 // 接続クローズで EOF 終了し、ハンドラが切断ログを書いて抜ける。
-func (h *Host) CloseHumans(msg string) {
+func (h *Host) CloseHumans() {
 	h.mu.Lock()
 	targets := make([]*session.Session, 0, len(h.online))
 	for _, s := range h.online {
@@ -170,9 +170,7 @@ func (h *Host) CloseHumans(msg string) {
 	}
 	h.mu.Unlock()
 	for _, s := range targets {
-		if msg != "" {
-			s.Notify(session.Notice{Kind: session.NoticeSystem, Time: time.Now(), Body: msg})
-		}
+		s.Notify(session.Notice{Kind: session.NoticeSystem, Time: time.Now(), Body: s.T("sshd.stopping")})
 		s.Close()
 	}
 }

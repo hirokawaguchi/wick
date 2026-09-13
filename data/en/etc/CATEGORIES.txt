@@ -1,0 +1,5 @@
+# Category display names (prefix of board IDs).
+# Format: ascii-id<space>display-name
+
+junk    Anything
+sys     System

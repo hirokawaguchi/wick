@@ -1,0 +1,3 @@
+profile - public profile of a given ID
+
+usage: profile [id]

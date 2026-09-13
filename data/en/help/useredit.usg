@@ -1,0 +1,9 @@
+useredit - change a member's level and time limit (sysop / co-sysop)
+
+usage: useredit [ID]
+
+    With no ID it asks for the target ID.
+    [1] level      … gen(general) / pro(probationary) / cos(co-sysop) / sys(sysop) / gst(guest)
+    [2] time limit … minutes (65535 = unlimited)
+    Enter saves and quits.
+    Main use is raising probationary (pro) members to gen (approving sign-up).

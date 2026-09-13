@@ -11,6 +11,7 @@ import (
 	"github.com/hirokawaguchi/wick/internal/assets"
 	"github.com/hirokawaguchi/wick/internal/command"
 	"github.com/hirokawaguchi/wick/internal/host"
+	"github.com/hirokawaguchi/wick/internal/i18n"
 	"github.com/hirokawaguchi/wick/internal/session"
 	"github.com/hirokawaguchi/wick/internal/store"
 	"github.com/hirokawaguchi/wick/internal/testenv"
@@ -106,6 +107,35 @@ func TestHelpListAndPerCommand(t *testing.T) {
 	// `? who` は who の詳しい使い方。
 	if !strings.Contains(got, "ログイン中のユーザー一覧を表示") {
 		t.Fatalf("`? who` usage missing: %q", got)
+	}
+}
+
+func TestHelpEnglish(t *testing.T) {
+	as, tbl := loadAssets(t)
+	in := strings.NewReader("?\r\nwho -?\r\noff\r\n")
+	var out strings.Builder
+	s := session.New("t", in, &out)
+	s.User = store.User{ID: "alice", Handle: "Alice", TLimit: 65535, Flags: acl.FlagGen, Expert: 1}
+	s.Lang = i18n.EN
+	env := &command.Env{
+		Ctx:    context.Background(),
+		Sess:   s,
+		Host:   host.New(10),
+		ACL:    tbl,
+		Assets: as,
+	}
+	if err := (&Engine{Reg: command.NewRegistry()}).Enter(env, "MAIN", "", 1); !errors.Is(err, command.ErrLogOff) {
+		t.Fatalf("err %v", err)
+	}
+	got := out.String()
+	if !strings.Contains(got, "list users currently online") {
+		t.Fatalf("en who summary missing: %q", got)
+	}
+	if !strings.Contains(got, "The leading number is the channel") {
+		t.Fatalf("en who -? missing: %q", got)
+	}
+	if strings.Contains(got, "ログイン中ユーザー一覧") {
+		t.Fatalf("ja who leaked into en session: %q", got)
 	}
 }
 
@@ -221,6 +251,39 @@ func TestNotesHierarchy(t *testing.T) {
 	}
 	if !strings.Contains(got, "[ INDEX ]") {
 		t.Fatalf("did not open board: %q", got)
+	}
+}
+
+func TestNotesHierarchyEN(t *testing.T) {
+	as, tbl := loadAssets(t)
+	st, err := store.OpenSQLite(filepath.Join(t.TempDir(), "t.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = st.Close() })
+	ctx := context.Background()
+	if err := st.SeedBoards(ctx); err != nil {
+		t.Fatal(err)
+	}
+	in := strings.NewReader("2\r\n.\r\noff\r\n")
+	var out strings.Builder
+	s := session.New("t", in, &out)
+	s.User = store.User{ID: "alice", Handle: "Alice", TLimit: 65535, Flags: acl.FlagGen, Expert: 1}
+	s.Lang = i18n.EN
+	h := host.New(10)
+	h.TryEnter(s)
+	env := &command.Env{
+		Ctx: ctx, Sess: s, Host: h, Store: st, ACL: tbl, Assets: as,
+	}
+	if err := (&Engine{Reg: command.NewRegistry()}).Enter(env, "MAIN", "", 1); !errors.Is(err, command.ErrLogOff) {
+		t.Fatalf("err %v out=%q", err, out.String())
+	}
+	got := out.String()
+	if !strings.Contains(got, "Anything") || !strings.Contains(got, "<junk.*>") {
+		t.Fatalf("en category missing: %q", got)
+	}
+	if strings.Contains(got, "なんでもボード") {
+		t.Fatalf("ja category leaked into en session: %q", got)
 	}
 }
 

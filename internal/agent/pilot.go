@@ -33,6 +33,7 @@ type pilot struct {
 func (m *Manager) startPilot(sp Spec, u store.User) (*pilot, error) {
 	sess, aio := session.NewPipe("agent", u.ID, u.Handle)
 	sess.User = u
+	sess.Lang = m.agentLang(u)
 	sess.SetDoing("MAIN")
 	if !m.host.EnterAgent(sess) {
 		_ = aio.Close()

@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"strings"
 	"time"
+
+	"github.com/hirokawaguchi/wick/internal/i18n"
 )
 
 func (s *SQLite) insertID(ctx context.Context, query string, args ...any) (int64, error) {
@@ -23,7 +25,11 @@ func (s *SQLite) insertID(ctx context.Context, query string, args ...any) (int64
 	return res.LastInsertId()
 }
 
-func (s *SQLite) SeedBoards(ctx context.Context) error {
+func (s *SQLite) SeedBoards(ctx context.Context, langs ...i18n.Lang) error {
+	lang := i18n.Default
+	if len(langs) > 0 {
+		lang = i18n.Normalize(string(langs[0]))
+	}
 	test, err := s.ensureBoard(ctx, Board{
 		Name: "junk.test", Desc: "scratch board", Slug: "junk",
 		Read: MaskAll, Write: MaskMembers, Basenote: MaskMembers,
@@ -32,7 +38,7 @@ func (s *SQLite) SeedBoards(ctx context.Context) error {
 		return err
 	}
 	if _, err := s.ensureBoard(ctx, Board{
-		Name: "junk.sandbox", Desc: "もう一つのジャンク", Slug: "junk",
+		Name: "junk.sandbox", Desc: i18n.T(lang, "seed.board.sandbox"), Slug: "junk",
 		Read: MaskAll, Write: MaskMembers, Basenote: MaskMembers,
 	}); err != nil {
 		return err
@@ -40,7 +46,7 @@ func (s *SQLite) SeedBoards(ctx context.Context) error {
 	// sys.jobs: エージェント用の仕事ボード（UC11/UC3）。人が依頼を立て、
 	// エージェントがレスで引き受けて結論を書き、% でクローズする。
 	jobs, err := s.ensureBoard(ctx, Board{
-		Name: "sys.jobs", Desc: "エージェントへの依頼", Slug: "jobs",
+		Name: "sys.jobs", Desc: i18n.T(lang, "seed.board.jobs"), Slug: "jobs",
 		Read: MaskMembers, Write: MaskMembers, Basenote: MaskMembers,
 	})
 	if err != nil {
@@ -49,9 +55,9 @@ func (s *SQLite) SeedBoards(ctx context.Context) error {
 	if jn, err := s.ListNotes(ctx, jobs.ID); err == nil && len(jn) == 0 {
 		now := time.Now()
 		if _, err := s.CreateNote(ctx, Note{
-			BoardID: jobs.ID, Title: "調査依頼: HyperNotes の事例",
+			BoardID: jobs.ID, Title: i18n.T(lang, "seed.job.title"),
 			Author: "sysop", Handle: "Sysop", PostTime: now, LastUpdate: now,
-			Body: "HyperNotes の使い方の良い事例を集めて、要点をまとめてください。\n担当: scout(収集) critic(批評)。結論はこのノートにレスで。\n",
+			Body: i18n.T(lang, "seed.job.body"),
 		}); err != nil {
 			return err
 		}
@@ -68,7 +74,7 @@ func (s *SQLite) SeedBoards(ctx context.Context) error {
 		BoardID: test.ID, Title: "Welcome to Wick",
 		Author: "sysop", Handle: "Sysop",
 		PostTime: now, LastUpdate: now,
-		Body: "junk.test です。INDEX は直近20件。w がベースノート、OPEN で w がレス、l が未読、new が全ボード未読、q で抜けます。\n",
+		Body: i18n.T(lang, "seed.welcome.body"),
 	})
 	return err
 }

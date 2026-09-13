@@ -1,0 +1,7 @@
+who - list users currently online
+
+usage: who
+
+    Lists users who are logged in.
+    The leading number is the channel. You can also send a telegram
+    with ! <number> <message>.

@@ -1,0 +1,8 @@
+expert - expert mode
+
+usage: expert [0|1|2]
+
+    Controls when menus are shown.
+    0  Show the menu on enter (beginner)
+    1  Show the current menu on a blank line (normal)
+    2  Do not show on enter. A blank line still shows the current menu

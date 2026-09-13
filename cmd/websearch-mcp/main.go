@@ -69,7 +69,7 @@ func main() {
 			},
 			Handler: getHandler(fetcher),
 		})
-		log.Print("web_get 有効（SSRF 防御・サイズ/時間/リダイレクト制限つき）")
+		log.Print("web_get enabled (SSRF/size/time/redirect limits on)")
 	}
 
 	mux := http.NewServeMux()
@@ -78,9 +78,9 @@ func main() {
 		_, _ = w.Write([]byte("ok"))
 	})
 
-	auth := "認証なし"
+	auth := "no auth"
 	if token != "" {
-		auth = "Bearer 認証"
+		auth = "bearer"
 	}
 	log.Printf("websearch-mcp listening on %s (provider=%s, %s)", listen, kind, auth)
 	if err := http.ListenAndServe(listen, mux); err != nil {

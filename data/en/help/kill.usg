@@ -1,0 +1,7 @@
+kill - force-disconnect a session (sysop)
+
+usage: kill <channel|ID>
+
+    Force-disconnects the given session (sysop / co-sysop).
+    Channel and ID work the same as who / ! . After confirm (y/N)
+    the other side is notified and the connection is closed.

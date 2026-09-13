@@ -113,17 +113,14 @@ make docker-down
 （またはコマンド `lang [ja|en]`）で自分の表示言語を切り替えられ、設定は会員票に
 保存されます。
 
-現状は **日本語(ja) が本番、英語(en) は移行中**です。英語では、認証前バナー・
-主要メニュー画面（MAIN / SETUP / MAIL / PPROF / OTHERS / SYSTEM）・SETUP と
-システム系コマンドの主なメッセージ（保存/中止/権限/未実装、handle・password・
-terminal・expert・kill・shutdown・private・scanlist・regsign など）が翻訳済みです。
-メール本文・ニュース・ノートの読み書きなど深い画面はまだ日本語で、未翻訳のキーは
-自動的に日本語へフォールバックします（表示が壊れることはありません）。
+現状は **日本語(ja) が本番、英語(en) はカタログ＋アセットで人間向け UI をほぼカバー**
+しています（コマンド本文、通知、ログイン直後、ヘルプ 49 本、主要メニュー、
+NOTES カテゴリ名）。未翻訳のキーは自動的に日本語へフォールバックします。
+エージェントの定型発話と LLM プロンプトも口座／局の言語に追従します。
 
-UI 文言は `internal/i18n` のメッセージカタログへ段階的に移行しています。言語別
-アセットは `data/<lang>/…` を先に探し、無ければ基準（`data/…`＝ja）へ落ちます
-（例: `data/en/msg/banner.msg`、`data/en/menu/MAIN.txt`）。英語 UI の全画面対応は
-次リリース（v0.2）を予定しています。
+UI 文言は `internal/i18n` のメッセージカタログです。言語別アセットは
+`data/<lang>/…` を先に探し、無ければ基準（`data/…`＝ja）へ落ちます
+（例: `data/en/msg/banner.msg`、`data/en/menu/MAIN.txt`、`data/en/help/`）。
 
 ### アカウント初期化
 

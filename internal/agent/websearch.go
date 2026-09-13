@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hirokawaguchi/wick/internal/i18n"
 )
 
 // Web 検索は「エージェント専用ツール」。人間向けコマンドは無い（web-search.md）。
@@ -143,33 +145,35 @@ func (b *webBroker) Get(agentID, rawURL string) *WebPage {
 }
 
 // formatWebPage は取得結果をモデルへ渡す文脈テキストにする（元 URL を必ず含める）。
-func formatWebPage(p *WebPage) string {
+func formatWebPage(p *WebPage, langs ...i18n.Lang) string {
 	if p == nil {
 		return ""
 	}
+	lang := langOf(langs...)
 	var sb strings.Builder
-	sb.WriteString("【web取得: " + p.URL + "】\n")
+	sb.WriteString(i18n.T(lang, "agent.web.page_head", p.URL))
 	if t := strings.TrimSpace(p.Title); t != "" {
-		sb.WriteString("題: " + oneLine(t) + "\n")
+		sb.WriteString(i18n.T(lang, "agent.web.page_title", oneLine(t)))
 	}
 	body := strings.TrimSpace(p.Text)
 	if body == "" {
-		body = "(本文を取得できませんでした)"
+		body = i18n.T(lang, "agent.web.page_fail")
 	}
-	sb.WriteString("本文（抜粋）:\n" + body + "\n")
+	sb.WriteString(i18n.T(lang, "agent.web.page_body") + body + "\n")
 	if p.Truncated {
-		sb.WriteString("(以降は省略)\n")
+		sb.WriteString(i18n.T(lang, "agent.web.page_more"))
 	}
-	sb.WriteString("これを要約して say で答え、本文に元の URL を必ず含めること。出典の無い断定はしないこと。\n")
+	sb.WriteString(i18n.T(lang, "agent.web.page_ask"))
 	return sb.String()
 }
 
 // formatWebHits は検索結果をモデルへ渡す文脈テキストにする（URL を必ず含める）。
-func formatWebHits(query string, hits []WebHit) string {
+func formatWebHits(query string, hits []WebHit, langs ...i18n.Lang) string {
+	lang := langOf(langs...)
 	var sb strings.Builder
-	sb.WriteString("【web検索結果: " + query + "】\n")
+	sb.WriteString(i18n.T(lang, "agent.web.hits_head", query))
 	if len(hits) == 0 {
-		sb.WriteString("(ヒットなし)\n")
+		sb.WriteString(i18n.T(lang, "agent.web.hits_none"))
 	}
 	for i, h := range hits {
 		sb.WriteString(strconv.Itoa(i+1) + ". " + h.Title + " — " + h.URL + "\n")
@@ -177,7 +181,7 @@ func formatWebHits(query string, hits []WebHit) string {
 			sb.WriteString("   " + oneLine(s) + "\n")
 		}
 	}
-	sb.WriteString("これらを踏まえ、必要なら本文に URL を含めて発言してください。出典の無い断定はしないこと。\n")
+	sb.WriteString(i18n.T(lang, "agent.web.hits_ask"))
 	return sb.String()
 }
 
@@ -186,11 +190,12 @@ func formatWebHits(query string, hits []WebHit) string {
 // 必要なら 1 回だけ検索して文脈テキスト（formatWebHits）を返す。web 未接続（live=false）・
 // 予算切れ・不要・ヒット無しなら "" を返す（＝従来どおりの生成にフォールバック）。
 // budget は呼び手（ブレイン）の残回数へのポインタ。成功時に 1 減らす。
-func research(cfg ModelConfig, web *webBroker, budget *int, selfID, context string) string {
+func research(cfg ModelConfig, web *webBroker, budget *int, selfID, context string, langs ...i18n.Lang) string {
+	lang := langOf(langs...)
 	if web == nil || !web.live || budget == nil || *budget <= 0 || !cfg.enabled() {
 		return ""
 	}
-	q := decideQuery(cfg, context)
+	q := decideQuery(cfg, context, lang)
 	if q == "" {
 		return ""
 	}
@@ -199,15 +204,14 @@ func research(cfg ModelConfig, web *webBroker, budget *int, selfID, context stri
 	if len(hits) == 0 {
 		return ""
 	}
-	return formatWebHits(q, hits)
+	return formatWebHits(q, hits, lang)
 }
 
 // decideQuery は「検索すべきか」をモデルに 1 行で判断させる。検索語 or 空（NONE）。
-func decideQuery(cfg ModelConfig, context string) string {
-	sys := "次の文脈に web 検索で裏取りすべき事実（固有名詞・作品・人物・製品・ニュース・数値・日付・場所・評判・仕様など）が" +
-		"含まれるか判断します。少しでも事実が絡むなら検索する方針で、検索語だけを1行で返す。" +
-		"あいさつや感想・気持ちだけで事実が無いときのみ NONE とだけ返す。前置き・説明・記号は書かない。"
-	out, err := chatOnce(cfg, sys, "文脈:\n"+context, 40, 0.3)
+func decideQuery(cfg ModelConfig, context string, langs ...i18n.Lang) string {
+	lang := langOf(langs...)
+	sys := i18n.T(lang, "agent.web.decide")
+	out, err := chatOnce(cfg, sys, i18n.T(lang, "agent.web.ctx")+context, 40, 0.3)
 	if err != nil {
 		return ""
 	}

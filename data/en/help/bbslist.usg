@@ -1,0 +1,12 @@
+bbslist - board list
+
+usage: bbslist
+
+    Lists boards you can read. The leading (RWB) is your permission
+    on that board.
+      R  can read (always present for listed boards)
+      W  can write a response
+      B  can start a new topic (base note)
+    A missing letter is a space (e.g. (RW ) is read and write only).
+    The name inside < > is the board ID; the right side is the description.
+    Open with open <board>.

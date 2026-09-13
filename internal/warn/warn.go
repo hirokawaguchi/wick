@@ -5,7 +5,8 @@ package warn
 
 import "strings"
 
-// External は外部リンクを含むメッセージを表示するときの注意書き。
+// External は外部リンク警告の日本語（カタログ warn.external の JA と同文）。
+// 画面表示はセッション言語の i18n キー warn.external を使う。
 const External = "※ 外部サイトからのDLです。提供元を確認できないファイルは開かないでください。"
 
 // HasLink は本文に http(s):// のリンクが含まれるかを返す。

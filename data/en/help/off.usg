@@ -1,0 +1,5 @@
+off - log off
+
+usage: off
+
+    Ends this session and disconnects.

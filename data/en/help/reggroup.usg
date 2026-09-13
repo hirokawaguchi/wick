@@ -1,0 +1,7 @@
+reggroup - broadcast groups
+
+usage: reggroup
+
+    Named recipient lists. Use with multipos @name.
+    Up to 8 groups, 16 IDs per group.
+    Delete by name or -N. Empty Enter quits.

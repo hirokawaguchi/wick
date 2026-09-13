@@ -1,0 +1,9 @@
+terminal - terminal settings
+
+usage: terminal
+
+    Sets screen width, height, color, and prompt.
+    $ in the prompt is replaced with the current menu name. Default is "$: ".
+    Convention: a trailing : is a menu (choose a function); a trailing >
+    is work inside a function ("target MODE>", e.g. junk.test INDEX> /
+    Inbox MAIL>).
