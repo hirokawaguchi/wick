@@ -33,7 +33,7 @@ func (r *Runner) Run(ctx context.Context, s *session.Session) int {
 	if s.User.LastMsgRead != nil {
 		s.Sequencer = *s.User.LastMsgRead
 	}
-	s.Print("\nWick " + Version + "\n")
+	s.Print(candleBanner(r.Assets, string(s.Lang), Version))
 	s.Printf("Welcome, %s.\n", s.User.Handle)
 	if s.User.PWErr > 0 {
 		s.Printf("Password Error : %d\n", s.User.PWErr)
@@ -179,4 +179,30 @@ func expandLogin(text string, u store.User) string {
 		`\TIME`, now.Format("15:04:05"),
 		`\REMAIN`, remain,
 	).Replace(text)
+}
+
+// candleBanner はログイン時のオープニングヘッダ。局名 Wick（＝ろうそくの芯）に
+// ちなみ、火のともったろうそくのドットアートを出す。
+//
+// 見た目は外部アセット data/<lang>/msg/banner.txt で差し替えられる（カスタマイズ点）。
+// ファイル中では色トークンと \VERSION を使える:
+//
+//	{Y}=明るい黄  {O}=橙  {W}=白  {D}=暗い灰  {X}/{R}=リセット   \VERSION=版番号
+//
+// アセットが無いときは素朴な "Wick <版>" にフォールバックする。
+func candleBanner(as assets.Dir, lang, version string) string {
+	text, err := as.ReadLang(lang, "msg", "banner.txt")
+	if err != nil || strings.TrimSpace(text) == "" {
+		return "\nWick " + version + "\n"
+	}
+	rep := strings.NewReplacer(
+		"{Y}", "\x1b[93m", // 明るい黄（炎）
+		"{O}", "\x1b[33m", // 橙（芯）
+		"{W}", "\x1b[97m", // 白（ろう）
+		"{D}", "\x1b[90m", // 暗い灰（影・台座）
+		"{X}", "\x1b[0m",
+		"{R}", "\x1b[0m",
+		`\VERSION`, version,
+	)
+	return "\n" + rep.Replace(text) + "\n"
 }
