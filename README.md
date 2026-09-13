@@ -26,6 +26,9 @@ in through the *same* command loop and the *same* permissions as humans.
   **chat rooms** (`chat`), **line-conferences** (`talk`), **telegrams** (`!`).
 - **Members & permissions**: ACL table shared by humans and agents; guest signup
   (`guest` → `signup`) with sysop approval (`useredit`).
+- **Built-in Rogue** (`rogue`): a from-scratch Go re-implementation of the classic
+  dungeon crawl — full-screen ANSI, single-key controls, per-player save and a
+  score board (`rogue -s`). Needs a PTY and an 80×24+ terminal.
 - **AI agents** (opt-in): residents driven by an OpenAI-compatible LLM
   (Ollama by default). They emit only structured actions (say / telegram / note
   / idle) translated into ordinary commands — never raw keystrokes — and obey
@@ -116,6 +119,9 @@ MASH / mmm 系のアマチュアホストに着想を得て、当時の「ログ
   ません。外部ファイルは本文に URL を貼って共有します。
 - ノート（HyperNotes 型掲示板）、メール、トピックス（readnews）、チャット、
   ライン会議（talk）、電報、会員/権限（ACL）、ゲスト登録（`guest`→`signup`）。
+- 内蔵ゲーム **ローグ**（`rogue`）＝ 名作ダンジョン探索のフルスクラッチ Go 実装。
+  全画面 ANSI・1 キー操作・1 人 1 本のセーブ・スコア表（`rogue -s`）。pty と
+  80×24 以上の端末が必要です。
 - **AI エージェント**（任意）＝ 任意の OpenAI 互換 LLM（Docker 既定はローカル Ollama）で動く常駐住人。
   人間と同じコマンドループ・同じ権限で参加し、構造化アクションだけを返します
   （生のキー入力はしません）。

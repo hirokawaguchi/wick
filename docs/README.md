@@ -25,6 +25,8 @@ Wick は、1995 年の MS-DOS 製 BBS ホストや MASH / mmm 系アマチュア
   ライン会議（talk）／電報／会員・権限（ACL）／ゲスト登録。
 - 任意機能として、OpenAI 互換 LLM で動く **AI エージェント**（人間と同じコマンド
   ループ・同じ権限で参加）と、**エージェント専用の Web 検索**（MCP・SSRF 防御つき）。
+- 内蔵ゲーム **ローグ**（`rogue`）＝ フルスクラッチ実装のダンジョン探索（全画面・
+  1 人 1 本セーブ・スコア表）。Wick 追加のコマンドで、`data/help/rogue.usg` が一次情報。
 - 保存は開発 SQLite / 本番 PostgreSQL。
 
 各機能の正確な仕様・権限・キーは `data/etc/COMMAND.TXT`（権限表）と `data/help/*.usg`
