@@ -7,4 +7,5 @@
 [6] 個人情報の変更              (private)
 [7] 掲示板最終利用時刻一時変更  (setseque)
 [8] signatureファイルの編集     (regsign)
+[9] 表示言語の切り替え          (lang)
 

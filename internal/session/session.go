@@ -11,6 +11,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/hirokawaguchi/wick/internal/i18n"
 	"github.com/hirokawaguchi/wick/internal/store"
 )
 
@@ -29,6 +30,7 @@ type Session struct {
 	Channel string
 	Chan    int    // who と ! で使う回線番号。1 から
 	Kind    string // KindHuman / KindAgent。既定は human
+	Lang    i18n.Lang // 表示言語。空は既定(ja)。ログイン時に User.Lang から設定
 	User    store.User
 	In      io.Reader
 	Out     io.Writer
@@ -192,6 +194,12 @@ func (s *Session) Print(text string) {
 
 func (s *Session) Printf(format string, args ...any) {
 	s.Print(fmt.Sprintf(format, args...))
+}
+
+// T はこのセッションの表示言語でメッセージを引く（i18n カタログ）。
+// s.Lang が空なら既定(ja)にフォールバックする。
+func (s *Session) T(key string, args ...any) string {
+	return i18n.T(s.Lang, key, args...)
 }
 
 func (s *Session) Close() {

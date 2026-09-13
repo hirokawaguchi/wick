@@ -17,6 +17,7 @@ import (
 	"github.com/hirokawaguchi/wick/internal/assets"
 	"github.com/hirokawaguchi/wick/internal/command"
 	"github.com/hirokawaguchi/wick/internal/host"
+	"github.com/hirokawaguchi/wick/internal/i18n"
 	"github.com/hirokawaguchi/wick/internal/reason"
 	"github.com/hirokawaguchi/wick/internal/session"
 	"github.com/hirokawaguchi/wick/internal/shell"
@@ -30,6 +31,7 @@ type Config struct {
 	HostKey   string
 	MaxAuth   int
 	IdleAfter time.Duration
+	Lang      string // 局の既定表示言語（認証前バナーに使う）
 }
 
 type Server struct {
@@ -101,7 +103,8 @@ const defaultBanner = "Wick\n初めての方は ID に guest（パスワード g
 // banner は認証前に全接続へ出す案内。ゲスト口からの登録手順を知らせる。
 func (srv *Server) banner(ctx ssh.Context) string {
 	text := defaultBanner
-	if b, err := srv.Assets.Read("msg", "banner.msg"); err == nil && strings.TrimSpace(b) != "" {
+	// 認証前なので個人設定は不明。局の既定言語（Cfg.Lang）で出す。
+	if b, err := srv.Assets.ReadLang(srv.Cfg.Lang, "msg", "banner.msg"); err == nil && strings.TrimSpace(b) != "" {
 		text = b
 	}
 	// SSH バナーは CRLF 区切りが無難。
@@ -149,6 +152,7 @@ func (srv *Server) handle(sess ssh.Session) {
 
 	s := session.New(ch, sess, sess)
 	s.User = u
+	s.Lang = i18n.Normalize(u.Lang) // 表示言語（未設定は既定 ja）
 	s.ID = sess.Context().SessionID()
 	s.SetConn(sess) // kill 用に下位接続を登録
 

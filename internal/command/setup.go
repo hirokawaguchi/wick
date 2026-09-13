@@ -5,8 +5,50 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hirokawaguchi/wick/internal/i18n"
 	"github.com/hirokawaguchi/wick/internal/store"
 )
+
+// cmdLang は表示言語（ja / en）を切り替える。SETUP 配下（Nouvelle 追加。正本の
+// 「ずらしたもの」参照）。選んだ言語は DB に保存し、以降このセッションへ即反映する。
+// UI 文字列の翻訳は段階移行中で、未翻訳キーは自動で日本語へフォールバックする。
+func cmdLang(e *Env) error {
+	cur := i18n.Normalize(e.Sess.User.Lang)
+	e.Sess.Printf(e.Sess.T("lang.current")+"\n", i18n.Label(cur))
+	e.Sess.Print(e.Sess.T("lang.opt.ja") + "\n")
+	e.Sess.Print(e.Sess.T("lang.opt.en") + "\n")
+
+	arg := strings.TrimSpace(e.Args)
+	if arg == "" {
+		e.Sess.Print(e.Sess.T("lang.prompt"))
+		got, err := e.Sess.ReadCommand(8)
+		if err != nil {
+			return err
+		}
+		arg = strings.TrimSpace(got)
+	}
+	if arg == "" {
+		e.Sess.Print(e.Sess.T("unchanged") + "\n")
+		return nil
+	}
+	var chosen i18n.Lang
+	switch strings.ToLower(arg) {
+	case "1", "ja", "jp", "日本語":
+		chosen = i18n.JA
+	case "2", "en", "english":
+		chosen = i18n.EN
+	default:
+		e.Sess.Print(e.Sess.T("invalid") + "\n")
+		return nil
+	}
+	if err := e.Store.UpdateLang(e.Ctx, e.Sess.User.ID, string(chosen)); err != nil {
+		return err
+	}
+	e.Sess.User.Lang = string(chosen)
+	e.Sess.Lang = chosen // 以降の出力は新しい言語で
+	e.Sess.Printf(e.Sess.T("lang.saved")+"\n", i18n.Label(chosen))
+	return nil
+}
 
 func cmdPrivate(e *Env) error {
 	u := &e.Sess.User

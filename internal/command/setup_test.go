@@ -8,9 +8,41 @@ import (
 
 	"github.com/hirokawaguchi/wick/internal/acl"
 	"github.com/hirokawaguchi/wick/internal/host"
+	"github.com/hirokawaguchi/wick/internal/i18n"
 	"github.com/hirokawaguchi/wick/internal/session"
 	"github.com/hirokawaguchi/wick/internal/store"
 )
+
+func TestLangSwitch(t *testing.T) {
+	ctx := context.Background()
+	st, err := store.OpenSQLite(filepath.Join(t.TempDir(), "t.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = st.Close() })
+	if err := st.SeedIfEmpty(ctx, "wick"); err != nil {
+		t.Fatal(err)
+	}
+	var out strings.Builder
+	s := session.New("t", strings.NewReader(""), &out)
+	s.User = store.User{ID: "alice", Handle: "Alice", Flags: acl.FlagGen, TLimit: 65535, Lang: "ja"}
+	e := &Env{Ctx: ctx, Sess: s, Store: st, Args: "en"}
+	if err := cmdLang(e); err != nil {
+		t.Fatal(err)
+	}
+	// セッション言語が en に切り替わり、DB にも保存される。
+	if s.Lang != i18n.EN {
+		t.Fatalf("session lang = %q, want en", s.Lang)
+	}
+	u, _ := st.GetUser(ctx, "alice")
+	if u.Lang != "en" {
+		t.Fatalf("stored lang = %q, want en", u.Lang)
+	}
+	// 切替後の確定メッセージは英語カタログで出る。
+	if !strings.Contains(out.String(), "language set to English") {
+		t.Fatalf("expected english confirmation, got %q", out.String())
+	}
+}
 
 func TestPrivateAndScanlist(t *testing.T) {
 	ctx := context.Background()

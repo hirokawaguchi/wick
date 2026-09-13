@@ -11,6 +11,8 @@ services:
     environment:
       TZ: Asia/Tokyo
       WICK_TZ: Asia/Tokyo
+      # 局の既定表示言語（ja / en）。会員は SETUP の lang で個別に切替可能。
+      WICK_LANG: "${WICK_LANG:-ja}"
       WICK_LISTEN: ":2222"
       WICK_DATA: /data
       WICK_ASSET: /app/asset

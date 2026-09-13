@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS access_logs (
 		`ALTER TABLE users ADD COLUMN autosign TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE users ADD COLUMN profile TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE users ADD COLUMN mail_save INTEGER NOT NULL DEFAULT 1`,
+		`ALTER TABLE users ADD COLUMN lang TEXT NOT NULL DEFAULT 'ja'`,
 		`ALTER TABLE boards ADD COLUMN sign TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE news_cursors ADD COLUMN unsub INTEGER NOT NULL DEFAULT 0`,
 		// ファイル添付は廃止。旧テーブルは掃除する。
@@ -272,7 +273,7 @@ func (s *SQLite) GetUser(ctx context.Context, id string) (User, error) {
 	return s.scanUser(s.queryRow(ctx, `
 SELECT id, password_hash, handle, flags, tlimit, pwerr, access, last_login, last_logout,
        expert, prompt, term_width, term_height, esc, last_msgread,
-       real_name, birthday, address, phone, comment, scan_list, autosign, profile, mail_save
+       real_name, birthday, address, phone, comment, scan_list, autosign, profile, mail_save, lang
 FROM users WHERE id = ?`, strings.ToLower(id)))
 }
 
@@ -380,7 +381,7 @@ func (s *SQLite) ListUsers(ctx context.Context) ([]User, error) {
 	rows, err := s.query(ctx, `
 SELECT id, password_hash, handle, flags, tlimit, pwerr, access, last_login, last_logout,
        expert, prompt, term_width, term_height, esc, last_msgread,
-       real_name, birthday, address, phone, comment, scan_list, autosign, profile, mail_save
+       real_name, birthday, address, phone, comment, scan_list, autosign, profile, mail_save, lang
 FROM users ORDER BY id`)
 	if err != nil {
 		return nil, err
@@ -456,6 +457,11 @@ func (s *SQLite) UpdateMailSave(ctx context.Context, id string, save bool) error
 		v = 1
 	}
 	_, err := s.exec(ctx, `UPDATE users SET mail_save = ? WHERE id = ?`, v, strings.ToLower(id))
+	return err
+}
+
+func (s *SQLite) UpdateLang(ctx context.Context, id, lang string) error {
+	_, err := s.exec(ctx, `UPDATE users SET lang = ? WHERE id = ?`, lang, strings.ToLower(id))
 	return err
 }
 
@@ -554,13 +560,17 @@ func scanUserRow(row rowScanner) (User, error) {
 	var u User
 	var login, logout, seq sql.NullInt64
 	var save int
+	var lang sql.NullString
 	err := row.Scan(&u.ID, &u.PasswordHash, &u.Handle, &u.Flags, &u.TLimit, &u.PWErr, &u.Access, &login, &logout,
 		&u.Expert, &u.Prompt, &u.TermWidth, &u.TermHeight, &u.Esc, &seq,
-		&u.RealName, &u.Birthday, &u.Address, &u.Phone, &u.Comment, &u.ScanList, &u.Autosign, &u.Profile, &save)
+		&u.RealName, &u.Birthday, &u.Address, &u.Phone, &u.Comment, &u.ScanList, &u.Autosign, &u.Profile, &save, &lang)
 	if err != nil {
 		return User{}, err
 	}
 	u.MailSave = save != 0
+	if lang.Valid {
+		u.Lang = lang.String
+	}
 	if login.Valid {
 		t := time.Unix(login.Int64, 0)
 		u.LastLogin = &t

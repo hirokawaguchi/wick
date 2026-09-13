@@ -33,6 +33,7 @@ func (r *Registry) registerBuiltins() {
 	r.Register("kill", cmdKill)
 	r.Register("power", cmdPower)
 	r.Register("agent", cmdAgent)
+	r.Register("lang", cmdLang)
 }
 
 // cmdPower は局の稼働情報（起動時刻・稼働時間・在室数）を出す。ACL で sys/cos に制限。
@@ -125,7 +126,7 @@ func cmdVersion(e *Env) error {
 }
 
 func cmdWhoami(e *Env) error {
-	text, err := e.Assets.Read("text", "whoami.txt")
+	text, err := e.Assets.ReadLang(string(e.Sess.Lang), "text", "whoami.txt")
 	if err != nil {
 		e.Sess.Printf("You are logged in as %s (%s).\n", e.Sess.User.ID, e.Sess.User.Handle)
 		return nil

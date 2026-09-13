@@ -205,9 +205,14 @@ func (e *Engine) hasMenu(env *command.Env, name string) bool {
 
 func (e *Engine) menuFile(env *command.Env, name, ext string) (string, bool) {
 	n := strings.ToUpper(name)
+	lang := ""
+	if env.Sess != nil {
+		lang = string(env.Sess.Lang)
+	}
+	// 言語別メニュー（data/<lang>/menu/...）を優先し、無ければ基準(ja)へ落ちる。
 	for _, cand := range []string{n + ext, strings.ToLower(n) + ext} {
-		if env.Assets.Exists("menu", cand) {
-			text, err := env.Assets.Read("menu", cand)
+		if env.Assets.ExistsLang(lang, "menu", cand) {
+			text, err := env.Assets.ReadLang(lang, "menu", cand)
 			if err == nil {
 				return text, true
 			}

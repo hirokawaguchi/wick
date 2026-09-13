@@ -149,6 +149,7 @@ func main() {
 			Listen:  cfg.Listen,
 			HostKey: cfg.HostKey,
 			MaxAuth: cfg.MaxAuth,
+			Lang:    cfg.Lang,
 		},
 	}
 

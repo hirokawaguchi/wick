@@ -61,6 +61,51 @@ func TestCreateUserFlagsAndGuest(t *testing.T) {
 	}
 }
 
+func TestUserLangDefaultAndUpdate(t *testing.T) {
+	ctx := context.Background()
+	s, err := OpenSQLite(filepath.Join(t.TempDir(), "t.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+	if err := s.CreateUser(ctx, User{ID: "u1", Handle: "U1", Flags: 1 << 31, TLimit: 30}, "p"); err != nil {
+		t.Fatal(err)
+	}
+	// 既定は ja（列デフォルト）。
+	u, err := s.GetUser(ctx, "u1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if u.Lang != "ja" {
+		t.Fatalf("default lang = %q, want ja", u.Lang)
+	}
+	// 更新して読み戻す。
+	if err := s.UpdateLang(ctx, "u1", "en"); err != nil {
+		t.Fatal(err)
+	}
+	u, _ = s.GetUser(ctx, "u1")
+	if u.Lang != "en" {
+		t.Fatalf("after update lang = %q, want en", u.Lang)
+	}
+	// ListUsers でも lang が読める。
+	users, err := s.ListUsers(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, x := range users {
+		if x.ID == "u1" {
+			found = true
+			if x.Lang != "en" {
+				t.Fatalf("ListUsers lang = %q, want en", x.Lang)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("u1 not in ListUsers")
+	}
+}
+
 func TestAuthenticateAndLog(t *testing.T) {
 	ctx := context.Background()
 	s, err := OpenSQLite(filepath.Join(t.TempDir(), "t.db"))

@@ -75,6 +75,7 @@ type User struct {
 	Autosign     string
 	Profile      string
 	MailSave     bool
+	Lang         string // 表示言語（ja / en）。空は既定(ja)扱い
 }
 
 func (u User) Unlimited() bool {
@@ -116,6 +117,7 @@ type Store interface {
 	UpdateAutosign(ctx context.Context, id, text string) error
 	UpdateProfile(ctx context.Context, id, text string) error
 	UpdateMailSave(ctx context.Context, id string, save bool) error
+	UpdateLang(ctx context.Context, id, lang string) error
 	CreateUser(ctx context.Context, u User, password string) error
 	// AllocMemberID は prefix＋ゼロ詰め連番の会員IDを払い出す（例 prd00001）。
 	AllocMemberID(ctx context.Context, prefix string, width int) (string, error)

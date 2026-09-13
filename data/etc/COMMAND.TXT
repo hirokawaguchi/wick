@@ -16,6 +16,7 @@ chat         oooooooo:oooooooo:oo------:oooooooo
 echo         oooooooo:oooooooo:oo-o----:oooooooo
 expert       oooooooo:oooooooo:oo-o----:oooooooo
 handle       oooooooo:oooooooo:oo-o----:oooooooo
+lang         oooooooo:oooooooo:oo-o----:oooooooo
 kill         --------:--------:oo------:--------
 log          --------:--------:oo------:--------
 off          oooooooo:oooooooo:oooo----:oooooooo

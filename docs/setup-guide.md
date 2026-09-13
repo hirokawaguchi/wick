@@ -103,8 +103,21 @@ make docker-down
 | `WICK_DB` | `<DATA>/wick.db` | SQLite の DB ファイルパス |
 | `WICK_HOST_KEY` | `<DATA>/ssh_host_ed25519` | SSH ホスト秘密鍵（無ければ自動生成） |
 | `WICK_TZ` / `TZ` | `Asia/Tokyo` | 表示・入力のタイムゾーン（保存は Unix 時刻） |
+| `WICK_LANG` | `ja` | 局の既定表示言語（`ja` / `en`）。新規ユーザと認証前バナーに適用 |
 | `WICK_MAX_SESSIONS` | `500` | 同時接続上限 |
 | `WICK_MAX_AUTH` | `4` | 認証試行上限 |
+
+### 表示言語（多言語対応・スキャフォールド）
+
+局の既定言語は `WICK_LANG`（`ja` / `en`、既定 `ja`）。会員は SETUP の `[9] lang`
+（またはコマンド `lang [ja|en]`）で自分の表示言語を切り替えられ、設定は会員票に
+保存されます。
+
+現状は **日本語(ja) が本番、英語(en) は骨組み**です。UI 文言は `internal/i18n` の
+メッセージカタログへ段階的に移行中で、未翻訳のキーは自動的に日本語へフォールバック
+します（表示が壊れることはありません）。言語別アセットは `data/<lang>/…` を先に探し、
+無ければ基準（`data/…`＝ja）へ落ちます（例: `data/en/msg/banner.msg`）。英語 UI の
+本格対応は次リリース（v0.2）を予定しています。
 
 ### アカウント初期化
 

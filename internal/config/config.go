@@ -4,6 +4,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/hirokawaguchi/wick/internal/i18n"
 )
 
 type Config struct {
@@ -19,6 +21,7 @@ type Config struct {
 	Driver        string
 	PGDSN         string
 	TimeZone      string
+	Lang          string // 局の既定表示言語（ja / en）。新規ユーザ・未設定時の既定
 
 	// エージェントの実 Brain（OpenAI 互換 HTTP）。Endpoint 空なら偽頭脳のまま。
 	AgentModelEndpoint string
@@ -45,6 +48,7 @@ func Load() Config {
 		Driver:        env("WICK_DB_DRIVER", "sqlite"),
 		PGDSN:         env("WICK_PG_DSN", ""),
 		TimeZone:      env("WICK_TZ", env("TZ", "Asia/Tokyo")),
+		Lang:          string(i18n.Normalize(env("WICK_LANG", "ja"))),
 
 		AgentModelEndpoint: env("WICK_AGENT_MODEL_ENDPOINT", ""),
 		AgentModelKey:      env("WICK_AGENT_MODEL_KEY", ""),
