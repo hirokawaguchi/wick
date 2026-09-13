@@ -14,8 +14,8 @@
 # --- editor / agent workspace config (not part of the release) ---
 /.cursor/
 
-# --- local verification launcher (env for LLM etc.; not published) ---
-/run-local.sh
+# --- local site config (may contain API keys/passwords; not published) ---
+/data/etc/wick.conf
 
 # --- reference material (原典; not redistributed) ---
 /temp/

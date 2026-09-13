@@ -88,10 +88,30 @@ make docker-down
 
 ---
 
-## 5. 設定（環境変数）
+## 5. 設定（設定ファイル or 環境変数）
 
-すべて環境変数で与えます（Compose では `deploy/docker-compose.yml` の
-`environment:` で設定）。
+サイト全体の設定は **1 つの設定ファイル `data/etc/wick.conf` にまとめて書けます**
+（ソース運用のおすすめ）。同じ設定を環境変数で渡すこともでき（Docker/Compose 運用）、
+**優先順位は「環境変数 > 設定ファイル > 組み込み既定」**です。キー名はどちらも同じ
+（`WICK_*` / `TZ`）。
+
+```bash
+# テンプレートをコピーして必要な行だけ有効化する
+cp data/etc/wick.conf.example data/etc/wick.conf
+$EDITOR data/etc/wick.conf
+make run        # 起動時に data/etc/wick.conf を自動で読む
+```
+
+- 書式は `KEY=VALUE`（1 行 1 個）。行頭 `#` はコメント。値は必要ならクォート可
+  （`"..."` / `'...'`）。クォートすれば値中の空白や `#` もそのまま保持されます。
+- ファイルの場所は `WICK_CONFIG=/path/to/wick.conf` で変更できます。
+- `wick.conf` は API キーやパスワードを含みうるため **`.gitignore` 済み**です
+  （テンプレート `wick.conf.example` だけをリポジトリに置いています）。
+- どのエージェントを常駐させるか（roster と `auto`）は一覧表なので、設定ファイル
+  ではなく [`data/etc/AGENTS.txt`](../data/etc/AGENTS.txt) で管理します（→ 6 章）。
+
+以下の各表のキーは、`wick.conf` に書いても環境変数で渡しても同じ意味です
+（Compose では `deploy/docker-compose.yml` の `environment:` で設定）。
 
 ### 基本
 

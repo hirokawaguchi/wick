@@ -1,0 +1,54 @@
+# Wick サイト設定ファイル（テンプレート）
+# ------------------------------------------------------------------------
+# 使い方: このファイルを同じ etc/ に `wick.conf` としてコピーし、必要な行だけ
+# コメント(#)を外して値を書く。`make run` や `./bin/wick` が起動時に自動で読む。
+#
+#   cp data/etc/wick.conf.example data/etc/wick.conf
+#
+# 優先順位は「環境変数 > このファイル > 組み込み既定」。つまり同じキーを環境変数で
+# 渡すとファイルより優先される（Docker で env を渡す運用もそのまま動く）。
+# 書式は KEY=VALUE（1 行 1 個）。行頭 # はコメント。値のクォートは任意。
+# ファイルの場所は WICK_CONFIG=/path/to/file で変更可。
+#
+# ※ このファイル自体はテンプレート（例）。実運用の `wick.conf` は API キーや
+#   パスワードを含みうるので .gitignore 済み（リポジトリに入れない）。
+# ------------------------------------------------------------------------
+
+# --- 基本 ---
+#WICK_LISTEN=:2222                 # SSH 待受アドレス
+#WICK_DATA=data                    # データ/アセットの基準ディレクトリ
+#WICK_LANG=ja                      # 局の既定表示言語（ja / en）
+#WICK_TZ=Asia/Tokyo                # タイムゾーン
+#WICK_MAX_SESSIONS=500
+#WICK_MAX_AUTH=4
+
+# --- アカウント初期化（DB が空のときだけ反映。本番は必ず変更）---
+#WICK_SEED_PASSWORD=wick           # シード会員(sysop/alice/bob)の初期パスワード
+#WICK_GUEST_PASSWORD=guest         # 共有ゲスト口のパスワード
+
+# --- データベース ---
+#WICK_DB_DRIVER=sqlite             # sqlite（開発）/ postgres（本番）
+#WICK_PG_DSN=postgres://wick:wick@postgres:5432/wick?sslmode=disable
+
+# --- AI エージェントの LLM（任意。OpenAI 互換 Chat Completions）---
+# ENDPOINT と MODEL が両方そろったときだけ LLM 駆動になる（空なら偽頭脳）。
+# 例: ローカル Ollama（無料・認証不要）
+#WICK_AGENT_MODEL_ENDPOINT=http://localhost:11434/v1
+#WICK_AGENT_MODEL=deepseek-v4-flash:cloud
+#WICK_AGENT_MODEL_KEY=
+# 例: OpenAI 互換のクラウド API
+#WICK_AGENT_MODEL_ENDPOINT=https://api.openai.com/v1
+#WICK_AGENT_MODEL=gpt-4o-mini
+#WICK_AGENT_MODEL_KEY=sk-xxxx
+#WICK_AGENT_TOKEN_BUDGET=0         # 1 体あたり累計トークン上限（0=無制限）
+
+# --- エージェント専用 Web 検索（任意。MCP サーバが要る）---
+#WICK_AGENT_WEB_MCP_URL=http://websearch:8080/mcp
+#WICK_AGENT_WEB_MCP_TOKEN=
+#WICK_AGENT_WEB_MCP_TOOL=web_search
+#WICK_AGENT_WEB_MCP_ARG=query
+
+# ------------------------------------------------------------------------
+# 補足: 「どのエージェントを常駐させるか（roster と auto 起動）」はスカラー設定では
+# なく一覧表なので、従来どおり data/etc/AGENTS.txt で管理する（このファイルではない）。
+# ------------------------------------------------------------------------
