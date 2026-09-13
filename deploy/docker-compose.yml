@@ -1,0 +1,101 @@
+services:
+  wick:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: wick
+    image: wick:0.9.0
+    container_name: wick
+    ports:
+      - "2222:2222"
+    environment:
+      TZ: Asia/Tokyo
+      WICK_TZ: Asia/Tokyo
+      WICK_LISTEN: ":2222"
+      WICK_DATA: /data
+      WICK_ASSET: /app/asset
+      WICK_SEED_PASSWORD: wick
+      WICK_GUEST_PASSWORD: guest
+      WICK_MAX_SESSIONS: "500"
+      # エージェントの実 LLM（OpenAI 互換）。既定はホストの Ollama。
+      # 別プロバイダに向けるときは各変数を上書き（空にすると偽頭脳へフォールバック）。
+      WICK_AGENT_MODEL_ENDPOINT: "${WICK_AGENT_MODEL_ENDPOINT:-http://host.docker.internal:11434/v1}"
+      WICK_AGENT_MODEL_KEY: "${WICK_AGENT_MODEL_KEY:-}"
+      WICK_AGENT_MODEL: "${WICK_AGENT_MODEL:-deepseek-v4-flash:cloud}"
+      # 1 体あたりの累計トークン上限（0 で無制限）。超えたら黙って在室し続ける。
+      WICK_AGENT_TOKEN_BUDGET: "${WICK_AGENT_TOKEN_BUDGET:-0}"
+      # エージェント専用 web 検索 MCP サーバ（増分3）。既定は空＝スタブのまま接続しない。
+      # 有効化するときは `--profile web` で websearch を起動し、URL とトークンを与える。
+      #   例: WICK_AGENT_WEB_MCP_URL=http://websearch:8080/mcp
+      WICK_AGENT_WEB_MCP_URL: "${WICK_AGENT_WEB_MCP_URL:-}"
+      WICK_AGENT_WEB_MCP_TOKEN: "${WEBSEARCH_TOKEN:-}"
+      WICK_AGENT_WEB_MCP_TOOL: "${WICK_AGENT_WEB_MCP_TOOL:-web_search}"
+      WICK_AGENT_WEB_MCP_ARG: "${WICK_AGENT_WEB_MCP_ARG:-query}"
+      # 保守用: カンマ区切りの scratch 板を起動時に一掃する（通常は空）。一度きりの掃除に使う。
+      WICK_RESET_BOARD: "${WICK_RESET_BOARD:-}"
+    extra_hosts:
+      # Linux でも host.docker.internal でホスト（Ollama）へ届くように。
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - wick-data:/data
+    # 局内 shutdown コマンドはプロセスを graceful 終了する。unless-stopped だと
+    # compose が自動再起動する（＝再起動扱い）。完全に止めるときは
+    # `docker compose -f deploy/docker-compose.yml stop wick` を使う。
+    restart: unless-stopped
+
+  # エージェント専用 web 検索 MCP サーバ（別サービス）。
+  # 既定では起動しない（--profile web で有効化）。挙動を変えたくない通常運用は起動不要。
+  #   起動例: docker compose -f deploy/docker-compose.yml --profile web up -d
+  #   併せて wick 側に WICK_AGENT_WEB_MCP_URL=http://websearch:8080/mcp を与えると接続する。
+  websearch:
+    profiles: ["web"]
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: websearch
+    image: wick-websearch:0.9.0
+    container_name: wick-websearch
+    environment:
+      TZ: Asia/Tokyo
+      WEBSEARCH_LISTEN: ":8080"
+      # provider: stub（既定・オフライン）／searxng（既定で SearXNG を使う）／ddg
+      WEBSEARCH_PROVIDER: "${WEBSEARCH_PROVIDER:-searxng}"
+      # SearXNG の URL（同 compose 内の searxng サービス）
+      SEARXNG_URL: "${SEARXNG_URL:-http://searxng:8080}"
+      # 認証トークン（空なら認証なし。wick 側の WICK_AGENT_WEB_MCP_TOKEN と同値にする）
+      WEBSEARCH_TOKEN: "${WEBSEARCH_TOKEN:-}"
+      WEBSEARCH_LIMIT: "${WEBSEARCH_LIMIT:-5}"
+      # web_get（URL 取得＋本文抽出）。重く危険なので既定 off。on で有効化（SSRF 防御つき）。
+      # 併せてエージェント側は AGENTS.txt の webget=on が必要。
+      WEBSEARCH_GET: "${WEBSEARCH_GET:-}"
+    depends_on:
+      - searxng
+    restart: unless-stopped
+
+  # SearXNG（無課金の自ホスト メタ検索）。websearch の既定 provider。web profile でのみ起動。
+  searxng:
+    profiles: ["web"]
+    image: searxng/searxng:latest
+    container_name: wick-searxng
+    environment:
+      TZ: Asia/Tokyo
+      SEARXNG_BASE_URL: "http://searxng:8080/"
+      SEARXNG_SETTINGS_PATH: "/etc/searxng/settings.yml"
+      SEARXNG_SECRET: "${SEARXNG_SECRET:-wick-dev-change-me}"
+    volumes:
+      - ./searxng:/etc/searxng:ro
+    restart: unless-stopped
+
+  postgres:
+    profiles: ["pg"]
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: wick
+      POSTGRES_USER: wick
+      POSTGRES_PASSWORD: wick
+    volumes:
+      - wick-pg:/var/lib/postgresql/data
+
+volumes:
+  wick-data:
+  wick-pg:

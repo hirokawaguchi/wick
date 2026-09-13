@@ -1,0 +1,6 @@
+setseque - シーケンサの変更
+
+usage: setseque
+
+    未読の境界時刻を変更します。
+    空行で保存済みの last_msgread に戻します。

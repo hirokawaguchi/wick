@@ -1,0 +1,9 @@
+useredit - 会員のレベルと制限時間を変える（sysop / co-sysop）
+
+usage: useredit [ID]
+
+    ID なしなら対象 ID を聞きます。
+    [1] level      … gen(一般) / pro(見習い) / cos(co-sysop) / sys(sysop) / gst(ゲスト)
+    [2] time limit … 制限時間（分。65535 で無制限）
+    Enter で保存して終了。
+    見習い(pro) を gen に上げるのが主な用途（オンライン登録の承認）。

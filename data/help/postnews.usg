@@ -1,0 +1,9 @@
+postnews - トピックスへ投稿
+
+usage: postnews [group]
+
+    新規記事。題と本文。どの入力でも Ctrl-C で作成を中止できる。
+    本文は矢印で前の行に戻って直せる。送信は単独行の . 。
+    既定グループは local。無いグループはここで作る。
+    sysop / co-sysop だけが投稿できる。
+    読むのは readnews。

@@ -1,0 +1,10 @@
+
+[1] エキスパートモード設定      (expert)
+[2] ターミナル環境設定          (terminal)
+[3] 巡回掲示板リストの編集      (scanlist)
+[4] ハンドルネームの変更        (handle)
+[5] パスワードの変更            (password)
+[6] 個人情報の変更              (private)
+[7] 掲示板最終利用時刻一時変更  (setseque)
+[8] signatureファイルの編集     (regsign)
+

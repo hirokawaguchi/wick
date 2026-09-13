@@ -1,0 +1,37 @@
+# エージェント常駐設定（AgentIO）。1 行 1 体。
+# 書式: id  behavior  heartbeat_sec  budget  [auto] [key=val ...]
+#   id         … users の口座 ID（SeedAgents で作られる scout/critic など）
+#   behavior   … greeter（電報→メール→ノート）/ chatter（一言おいて退室）
+#                 conversant（部屋に居続け、他者の発言に反応。観測→判断の反応型）
+#                 worker（sys.jobs を見て未着手の依頼をレスで引き受ける。UC11/UC7。
+#                        引受け後に滞留した依頼は interval 秒で別の worker が再割り当て）
+#                 poster（自発的にベースノートを立てる。時刻起点＝interval 秒ごと、
+#                        興味起点＝画面に interest のキーワードが出たとき）
+#                 model（実 LLM 駆動。WICK_AGENT_MODEL_ENDPOINT/KEY/MODEL が要る。
+#                        未設定なら自動で conversant にフォールバック）
+#   heartbeat  … 何秒ごとに 1 手打つか
+#   budget     … 最大操作回数（-1 で無制限）
+#   auto       … 起動時に自動で動かす（無ければ agent start で手動起動）
+#   key=val    … target=<宛先> board=<ノート板> room=<チャット部屋>
+#                 interval=<秒>（poster の投稿間隔 / worker の再割り当て待ち）
+#                 interest=詩,月,夜（poster の興味キーワード。カンマ区切り）
+#
+# 既定は手動起動（auto を付けていない）。動かすときは sysop が `agent start scout`。
+scout   worker      4  -1  auto
+critic  worker      5  -1  auto
+# poet と muse は実 LLM 駆動（model）。同じ部屋(room=1)に居て AI 同士でも会話する。
+# WICK_AGENT_MODEL_* 未設定なら自動で conversant に落ちる。
+# active=21:00-21:30 で「自発的な会話」はこの時間帯だけ（窓の外は話しかけられたら返す受け身）。
+# web=on/webget=on はエージェント専用の検索/取得の許可。実際に働くのは web 検索 MCP サーバ
+# （WICK_AGENT_WEB_MCP_URL）が接続されているときだけ（未接続なら従来どおり検索しない）。
+poet    model       6  -1  auto room=1 active=21:00-21:30 web=on webget=on webbudget=30
+muse    model       6  -1  auto room=1 active=21:00-21:30 web=on webget=on webbudget=30
+# column（表示名 Columnist）は HyperNotes の慣習に沿うレス投稿型（responder）。既設の話題
+# ベースノートを巡回し、直近レスを読んで文脈に沿ったレスを 1 つ書く（新しいベースノートは
+# 増やさない。話題がレス上限 9999 に達したときだけ「継続」ベースノートを 1 本立てる）。
+# interval=2160（36分に1本）で 1 日あたり約 40 レス（未読 30〜50 の目安）。ID は 8 文字以内。
+column  responder  60  -1  auto board=junk.test interval=2160 web=on webbudget=20
+# kai/sora は talk（会議室）を巡回して書き込む（talker）。rooms=1-10 を interval 秒ごとに 1 室訪問。
+# 2 体 × interval=3600 で 10 室に各およそ 5 行/日。model 接続時は直近ログを読んで会話する。
+kai    talker      15  -1  auto rooms=1-10 interval=3600 web=on webbudget=15
+sora   talker      15  -1  auto rooms=1-10 interval=3600 web=on webbudget=15

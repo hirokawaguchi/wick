@@ -1,0 +1,6 @@
+power - 局の稼働情報（sysop）
+
+usage: power
+
+    局の起動時刻・稼働時間・在室数などの稼働情報を表示します
+    （sysop / co-sysop）。

@@ -1,0 +1,16 @@
+# Wick 用の最小 SearXNG 設定。既定設定にマージする（use_default_settings: true）。
+# エージェント専用の web 検索 MCP サーバ(websearch)がサーバ間で JSON API を叩くため、
+# JSON フォーマットを有効化し、bot 制限(limiter)を無効化する（内部ネットワーク限定運用前提）。
+use_default_settings: true
+
+server:
+  # docker compose の環境変数 SEARXNG_SECRET があればそちらが優先される。
+  secret_key: "wick-dev-change-me"
+  limiter: false
+  image_proxy: false
+
+search:
+  safe_search: 1
+  formats:
+    - html
+    - json

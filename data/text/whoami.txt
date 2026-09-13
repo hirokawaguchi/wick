@@ -1,0 +1,2 @@
+You are logged in to Wick.
+Use who to see others, setup to change your profile, off to leave.

@@ -1,0 +1,9 @@
+regprof - 公開プロフィール登録
+
+usage: regprof
+
+    他の利用者が profile / readprof / searchprof で見られる文。
+    会員票 private の本名住所は出ません。
+    現在の公開文がそのまま開くので、矢印で移動して編集できる。
+    送信は単独行の . 、空のまま . で削除、中止は Ctrl-C。
+    16 行・1 行 78 文字まで。

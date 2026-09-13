@@ -1,0 +1,7 @@
+reggroup - 同報グループ
+
+usage: reggroup
+
+    名前付きの宛先リスト。multipos @名前 で使う。
+    8 グループ、1 グループ 16 ID まで。
+    名前、-番号 で削除。空 Enter で終了。

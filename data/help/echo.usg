@@ -1,0 +1,5 @@
+echo - 文字列表示
+
+usage: echo [string]
+
+    文字列 string を表示します。

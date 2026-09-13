@@ -1,0 +1,7 @@
+lookreco - 送信控え
+
+usage: lookreco
+
+    自分が送った控え。番号で読む。
+    控えを残すかは regmbox。
+    lookrecord でも同じ。

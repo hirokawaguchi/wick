@@ -1,0 +1,3 @@
+profile - 指定 ID の公開プロフィール
+
+usage: profile [id]

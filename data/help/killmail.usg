@@ -1,0 +1,6 @@
+killmail - 送信メール撤回
+
+usage: killmail
+
+    相手がまだ読んでいない送信を撤回します。
+    番号、dir、q / . 。

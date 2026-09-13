@@ -1,0 +1,7 @@
+shutdown - 局の停止（sysop）
+
+usage: shutdown
+
+    局を安全に停止します（sysop / co-sysop）。確認(y/N)のあと在室者へ
+    一斉告知してからサーバを graceful に停止します。
+    ※ コンテナが restart: unless-stopped の場合は再起動になります。

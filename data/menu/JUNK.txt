@@ -1,0 +1,4 @@
+
+[1] junk.test        scratch board
+[2] junk.sandbox     もう一つのジャンク
+

@@ -1,0 +1,6 @@
+regmbox - メールボックス設定
+
+usage: regmbox [on|off]
+
+    送信控えを lookreco に残すか。既定は on。
+    控えオフでも配送は残る。未読なら killmail できる。

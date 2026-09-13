@@ -1,0 +1,10 @@
+
+[1] メール送信          (postmail)
+[2] メール受信          (readmail)
+[3] メール削除          (deletemail)
+[4] メール撤回          (killmail)
+[5] メール送信簿表示    (lookrecord)
+[6] 同報メール送信      (multipost)
+[7] メールボックス設定  (regmbox)
+[8] メールグループ設定  (reggroup)
+

@@ -1,0 +1,6 @@
+roomlist - ライン会議の部屋一覧
+
+usage: roomlist
+
+    各部屋の開閉、進行 line、在室数、題を出します。
+    入室は talk N です。

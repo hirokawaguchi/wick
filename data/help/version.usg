@@ -1,0 +1,5 @@
+version - バージョン表示
+
+usage: version
+
+    システムのバージョンを表示します。

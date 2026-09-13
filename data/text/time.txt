@@ -1,0 +1,2 @@
+The host clock is the system time of this machine.
+Use the login banner for the time at connect.

@@ -1,0 +1,24 @@
+# --- build artifacts ---
+/bin/
+/wick
+/websearch-mcp
+*.exe
+.DS_Store
+/tmp/
+
+# --- runtime data (SQLite DB, SSH host key) ---
+/data/*.db
+/data/*.db-*
+/data/*host*
+
+# --- editor / agent workspace config (not part of the release) ---
+/.cursor/
+
+# --- reference material (原典; not redistributed) ---
+/temp/
+
+# --- design notes tied to the original system (kept locally, not published) ---
+/docs/kernel-spec.md
+/docs/bbs-spec.md
+/docs/porting-plan.md
+/docs/command-canon.md

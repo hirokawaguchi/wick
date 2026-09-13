@@ -1,0 +1,7 @@
+deletema - 受信メール削除
+
+usage: deletema
+
+    受信箱から削除します（論理削除）。
+    番号、dir、q / . 。
+    deletemail でも同じ。

@@ -1,0 +1,10 @@
+readmail - 受信メール
+
+usage: readmail
+
+    受信箱の一覧。番号で読む。未読は * 。
+
+    三種の場（notes・mail・news / chat・talk）で操作を揃えています。
+      i  一覧を表示（dir / 空 Enter でも可）
+      q  終了（. でも可）
+      ?  ヘルプ（-? でも可）

@@ -1,0 +1,6 @@
+board - 掲示板の作成と編集
+
+usage: board [name]
+
+    名前、説明、slug、read/write/basenote マスクを編集します。
+    sys / cos のみ使えます。

@@ -1,0 +1,7 @@
+
+[1] プロフィール登録              (regprof)
+[2] プロフィールのキーワード検索  (searchpr)
+[3] 指定IDのプロフィールを表示    (profile)
+[4] プロフィールをID順に表示      (readprof)
+[5] 登録ユーザー一覧を表示        (userlist)
+[6] Wick version 表示             (version)

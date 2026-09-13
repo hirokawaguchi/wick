@@ -1,0 +1,65 @@
+# command  権限マスク  [alias]
+#
+# マスクは o/- を左から bit31..bit0（`:` は飾り、無視される）。
+# 効くビット: 1文字目=gen(bit31)、17文字目以降の3オクテット目先頭が
+#   sys(bit15) cos(bit14) gst(bit13) pro(bit12)。
+# つまり 3オクテット目の並びは [sys cos gst pro - - - -]。
+#   everyone(guest+pro): oooo----   会員(gen/sys/cos): oo------
+#   見習いも読める(pro可 gst不可): oo-o----   sys/cos だけ: oo------ かつ 1オクテット目 --------
+#   ゲストだけ: --o-----（gst のみ）
+
+!            oooooooo:oooooooo:oo------:oooooooo
+agent        --------:--------:oo------:--------
+bbslist      oooooooo:oooooooo:oo-o----:oooooooo
+board        --------:--------:oo------:--------
+chat         oooooooo:oooooooo:oo------:oooooooo
+echo         oooooooo:oooooooo:oo-o----:oooooooo
+expert       oooooooo:oooooooo:oo-o----:oooooooo
+handle       oooooooo:oooooooo:oo-o----:oooooooo
+kill         --------:--------:oo------:--------
+log          --------:--------:oo------:--------
+off          oooooooo:oooooooo:oooo----:oooooooo
+open         oooooooo:oooooooo:oo-o----:oooooooo
+option       oooooooo:oooooooo:oo-o----:oooooooo
+password     oooooooo:oooooooo:oo-o----:oooooooo
+power        --------:--------:oo------:--------
+ps           --------:--------:oo------:--------
+setseque     oooooooo:oooooooo:oo-o----:oooooooo
+shutdown     --------:--------:oo------:--------
+signup       --------:--------:--o-----:--------
+terminal     oooooooo:oooooooo:oo-o----:oooooooo
+useredit     --------:--------:oo------:--------
+userlist     oooooooo:oooooooo:oo-o----:oooooooo
+version      oooooooo:oooooooo:oooo----:oooooooo
+who          oooooooo:oooooooo:oo-o----:oooooooo
+whoami       oooooooo:oooooooo:oo-o----:oooooooo
+time         oooooooo:oooooooo:oo-o----:oooooooo
+
+# mail / notes / setup / pprof
+postmail     oooooooo:oooooooo:oo------:oooooooo
+readmail     oooooooo:oooooooo:oo-o----:oooooooo
+deletema     oooooooo:oooooooo:oo-o----:oooooooo
+killmail     oooooooo:oooooooo:oo-o----:oooooooo
+lookreco     oooooooo:oooooooo:oo-o----:oooooooo
+multipos     oooooooo:oooooooo:oo------:oooooooo
+regmbox      oooooooo:oooooooo:oo-o----:oooooooo
+reggroup     oooooooo:oooooooo:oo-o----:oooooooo
+scanlist     oooooooo:oooooooo:oo-o----:oooooooo
+private      oooooooo:oooooooo:oo-o----:oooooooo
+regsign      oooooooo:oooooooo:oo-o----:oooooooo
+regprof      oooooooo:oooooooo:oo------:oooooooo
+searchprof   oooooooo:oooooooo:oo-o----:oooooooo
+profile      oooooooo:oooooooo:oo-o----:oooooooo
+readprof     oooooooo:oooooooo:oo-o----:oooooooo
+talk         oooooooo:oooooooo:oo------:oooooooo
+roomlist     oooooooo:oooooooo:oo-o----:oooooooo
+readnews     oooooooo:oooooooo:oo-o----:oooooooo
+postnews     --------:--------:oo------:--------
+
+# alias
+w            oooooooo:oooooooo:oo-o----:oooooooo who
+new          oooooooo:oooooooo:oo-o----:oooooooo open -s@ % *
+deletemail   oooooooo:oooooooo:oo-o----:oooooooo deletema
+lookrecord   oooooooo:oooooooo:oo-o----:oooooooo lookreco
+multipost    oooooooo:oooooooo:oo------:oooooooo multipos
+topic        oooooooo:oooooooo:oo-o----:oooooooo readnews

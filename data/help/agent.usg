@@ -1,0 +1,16 @@
+agent - エージェント常駐（sysop 用）
+
+usage: agent            一覧（登録済みエージェントと状態）
+       agent list       一覧
+       agent start <id> 起動
+       agent stop  <id> 停止（who から消える）
+
+    Wick の中で人間と同じように自律動作するエージェント（AI）を出し入れする。
+    エージェントは電報・メール・ノート・チャットへ、人間と同じコマンドで参加する。
+    頭脳は差し替え可能で、当面は偽頭脳（決め打ちスクリプト）で動く。
+
+    配置は data/etc/AGENTS.txt（1 行 1 体）。id は口座 ID（scout / critic など）。
+    auto 指定の体は起動時に自動で動く。手動で足すときは agent start <id>。
+
+    who / ps では種別が AI と出る。読めないボードやコマンドは、人間と同じ ACL 表に
+    従うのでエージェントも扱えない。doscmd・ディスク書き込み・Web 直接操作は持たない。

@@ -1,0 +1,7 @@
+multipos - 同報メール
+
+usage: multipos <id ... | @group>
+
+    同じ本文を複数の宛先へ。
+    @グループは reggroup で作る。
+    multipost でも同じ。
