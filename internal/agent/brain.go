@@ -75,15 +75,18 @@ func (b *scriptedBrain) Next(Observation) (string, bool) {
 // 部屋に入って居続け、他者の発言に反応し、沈黙が続けば控えめに一言振る。
 // 「観測→判断」の最小形。実モデルはこの Next を差し替えるだけでよい。
 type conversantBrain struct {
-	selfID string
-	room   int
-	lang   i18n.Lang
+	selfID  string
+	room    int
+	lang    i18n.Lang
+	isAgent func(id string) bool // 相手がエージェントか（nil なら全員人間扱い）
 
-	entered      bool
-	silence      int // 連続沈黙の心拍数
-	silenceLimit int // これを超えたら一言振る
-	fillerStreak int // 誰も居ない/黙っている間に自分から振った連続回数
-	maxFillers   int // 空き部屋で自分だけ喋り続けないための上限
+	entered        bool
+	silence        int // 連続沈黙の心拍数
+	silenceLimit   int // これを超えたら一言振る
+	fillerStreak   int // 誰も居ない/黙っている間に自分から振った連続回数
+	maxFillers     int // 空き部屋で自分だけ喋り続けないための上限
+	agentStreak    int // エージェント相手に連続で相づちを打った回数
+	maxAgentReacts int // エージェント相手の相づち上限（無限ループ防止）
 }
 
 func (b *conversantBrain) Next(obs Observation) (string, bool) {
@@ -91,11 +94,21 @@ func (b *conversantBrain) Next(obs Observation) (string, bool) {
 		b.entered = true
 		return fmt.Sprintf("chat %d\n", b.room), false
 	}
-	// 他者の発言があれば、それに反応する。
+	// 他者の発言があれば反応する。ただし相手もエージェントのときは数回で打ち止め、
+	// 以降は人間の発言があるまで黙る（AI 同士が「了解です」を延々往復して、引用が
+	// 入れ子に肥大するのを防ぐ）。
 	if who, text := lastOtherUtterance(obs.Screen, b.selfID); who != "" {
-		b.silence = 0
-		b.fillerStreak = 0
-		return reactLine(who, text, b.lang) + "\n", false
+		human := b.isAgent == nil || !b.isAgent(who)
+		if human {
+			b.silence, b.fillerStreak, b.agentStreak = 0, 0, 0
+			return reactLine(who, text, b.lang) + "\n", false
+		}
+		if b.agentStreak < b.maxAgentReacts {
+			b.agentStreak++
+			b.silence = 0
+			return reactLine(who, text, b.lang) + "\n", false
+		}
+		// 打ち止め。反応せず、下の沈黙処理（控えめな話題振り）に任せる。
 	}
 	// 沈黙が続けば控えめに一言。ただし連投で埋め尽くさない。
 	b.silence++
@@ -168,7 +181,13 @@ func clipRunes(s string, max int) string {
 }
 
 func reactLine(who, text string, langs ...i18n.Lang) string {
-	t := clipRunes(strings.TrimSpace(text), 24)
+	// 相手の発言が相づち（「…」了解です。）だった場合に引用が入れ子に肥大しないよう、
+	// 鉤括弧・引用符を落としてから短く引用する。
+	t := strings.NewReplacer(
+		"「", "", "」", "", "『", "", "』", "",
+		"\"", "", "“", "", "”", "",
+	).Replace(strings.TrimSpace(text))
+	t = clipRunes(strings.TrimSpace(t), 16)
 	return i18n.T(langOf(langs...), "agent.react", who, t)
 }
 
@@ -266,11 +285,12 @@ func buildBrain(sp Spec, id, handle string, langs ...i18n.Lang) Brain {
 			room = 1
 		}
 		return &conversantBrain{
-			selfID:       id,
-			room:         room,
-			lang:         lang,
-			silenceLimit: 3,
-			maxFillers:   3,
+			selfID:         id,
+			room:           room,
+			lang:           lang,
+			silenceLimit:   3,
+			maxFillers:     3,
+			maxAgentReacts: 2,
 		}
 	case "chatter":
 		room := sp.Room

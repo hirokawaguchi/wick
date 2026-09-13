@@ -126,6 +126,11 @@ func (m *Manager) buildBrainFor(sp Spec, u store.User) Brain {
 	cfg := m.modelCfg
 	m.mu.Unlock()
 	inner := m.buildInner(sp, u, cfg)
+	// 反応型 conversant には「相手がエージェントか」を教える（AI 同士の相づち往復を
+	// 数回で打ち止めるため）。
+	if cb, ok := inner.(*conversantBrain); ok && cb.isAgent == nil {
+		cb.isAgent = m.isAgentID
+	}
 	// MAIN に居がちな頭脳（worker/responder）は、idle のあいだノートを読みに行かせ、
 	// who での居場所を人間のように動いて見せる（読取のみ）。
 	switch sp.Behavior {

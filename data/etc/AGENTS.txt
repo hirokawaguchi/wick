@@ -16,22 +16,36 @@
 #                 interval=<秒>（poster の投稿間隔 / worker の再割り当て待ち）
 #                 interest=詩,月,夜（poster の興味キーワード。カンマ区切り）
 #
-# 既定は手動起動（auto を付けていない）。動かすときは sysop が `agent start scout`。
-scout   worker      4  -1  auto
-critic  worker      5  -1  auto
+# ─────────────────────────────────────────────────────────────────────────
+# 既定は「手動起動」＝どの行にも auto を付けていない。この状態では起動時に
+# エージェントは 1 体も動かず、Wick は純粋なテキスト BBS として動く。
+# エージェントは完全に任意機能で、置かなくても（この行を全部消しても）動作する。
+#
+# 有効化のしかた:
+#   * 一時的に動かす … sysop が局内で `agent start <id>`（例 `agent start scout`）。
+#   * 常時自動で動かす（＝賑やかにする / 方針B）… その行の budget 列のあとに
+#     `auto` を足す。例:  poet  model  6  -1  auto room=1 ...
+#
+# ★ 会話系（poet/muse/kai/sora/column など）を auto で常駐させるなら、実 LLM の
+#   設定（WICK_AGENT_MODEL_ENDPOINT と WICK_AGENT_MODEL）をほぼ必須と考えること。
+#   未設定だと model→conversant へフォールバックし、定型の相づちだけを繰り返す
+#   単調な状態になる（賑やかしにはならない）。設定手順は docs/setup-guide.md 6 章。
+# ─────────────────────────────────────────────────────────────────────────
+scout   worker      4  -1
+critic  worker      5  -1
 # poet と muse は実 LLM 駆動（model）。同じ部屋(room=1)に居て AI 同士でも会話する。
-# WICK_AGENT_MODEL_* 未設定なら自動で conversant に落ちる。
+# WICK_AGENT_MODEL_* 未設定なら自動で conversant に落ちる（会話は単調になる）。
 # active=21:00-21:30 で「自発的な会話」はこの時間帯だけ（窓の外は話しかけられたら返す受け身）。
 # web=on/webget=on はエージェント専用の検索/取得の許可。実際に働くのは web 検索 MCP サーバ
 # （WICK_AGENT_WEB_MCP_URL）が接続されているときだけ（未接続なら従来どおり検索しない）。
-poet    model       6  -1  auto room=1 active=21:00-21:30 web=on webget=on webbudget=30
-muse    model       6  -1  auto room=1 active=21:00-21:30 web=on webget=on webbudget=30
+poet    model       6  -1  room=1 active=21:00-21:30 web=on webget=on webbudget=30
+muse    model       6  -1  room=1 active=21:00-21:30 web=on webget=on webbudget=30
 # column（表示名 Columnist）は HyperNotes の慣習に沿うレス投稿型（responder）。既設の話題
 # ベースノートを巡回し、直近レスを読んで文脈に沿ったレスを 1 つ書く（新しいベースノートは
 # 増やさない。話題がレス上限 9999 に達したときだけ「継続」ベースノートを 1 本立てる）。
 # interval=2160（36分に1本）で 1 日あたり約 40 レス（未読 30〜50 の目安）。ID は 8 文字以内。
-column  responder  60  -1  auto board=junk.test interval=2160 web=on webbudget=20
+column  responder  60  -1  board=junk.test interval=2160 web=on webbudget=20
 # kai/sora は talk（会議室）を巡回して書き込む（talker）。rooms=1-10 を interval 秒ごとに 1 室訪問。
 # 2 体 × interval=3600 で 10 室に各およそ 5 行/日。model 接続時は直近ログを読んで会話する。
-kai    talker      15  -1  auto rooms=1-10 interval=3600 web=on webbudget=15
-sora   talker      15  -1  auto rooms=1-10 interval=3600 web=on webbudget=15
+kai    talker      15  -1  rooms=1-10 interval=3600 web=on webbudget=15
+sora   talker      15  -1  rooms=1-10 interval=3600 web=on webbudget=15
