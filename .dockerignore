@@ -1,6 +1,10 @@
 .git
 bin
 data/*.db
+# SSH ホスト鍵はイメージに焼き込まない（/data ボリューム側で生成・保管する）
+data/ssh_host_*
+# ローカル秘匿設定（LLM キー等）は焼き込まない。テンプレの .example は残す
+data/etc/wick.conf
 docs
 **/*_test.go
 .DS_Store

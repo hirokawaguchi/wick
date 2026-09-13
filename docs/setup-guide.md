@@ -104,9 +104,16 @@ make run        # 起動時に data/etc/wick.conf を自動で読む
 
 - 書式は `KEY=VALUE`（1 行 1 個）。行頭 `#` はコメント。値は必要ならクォート可
   （`"..."` / `'...'`）。クォートすれば値中の空白や `#` もそのまま保持されます。
-- ファイルの場所は `WICK_CONFIG=/path/to/wick.conf` で変更できます。
-- `wick.conf` は API キーやパスワードを含みうるため **`.gitignore` 済み**です
-  （テンプレート `wick.conf.example` だけをリポジトリに置いています）。
+- ファイルの場所は `WICK_CONFIG=/path/to/wick.conf` で変更できます。既定の探索先は
+  `<WICK_DATA>/etc/wick.conf` です。
+- **Docker/Compose では設定ファイルより環境変数のほうが実用的**です。設定ファイルの
+  探索先はコンテナ内 `/data/etc/wick.conf`（＝ボリューム側）で、`wick.conf` は
+  **イメージには焼き込まれません**。そのため Compose 運用では
+  `deploy/docker-compose.yml` の `environment:` で渡すのが基本です。どうしてもファイルで
+  渡したいときは `/data` に bind mount するか、`WICK_CONFIG` で場所を指定します。
+- `wick.conf` は API キーやパスワードを含みうるため **`.gitignore` / `.dockerignore`
+  済み**です（テンプレート `wick.conf.example` だけをリポジトリに置き、SSH ホスト秘密鍵
+  `ssh_host_*` ともどもイメージに焼き込みません）。
 - どのエージェントを常駐させるか（roster と `auto`）は一覧表なので、設定ファイル
   ではなく [`data/etc/AGENTS.txt`](../data/etc/AGENTS.txt) で管理します（→ 6 章）。
 
@@ -329,7 +336,9 @@ docker compose -f deploy/docker-compose.yml --profile web up -d --build
 1. **パスワードとホスト鍵を固定する**
    - 初回起動前に `WICK_SEED_PASSWORD` を強いものに設定（DB が空のときのみ反映）。
    - `WICK_HOST_KEY` を永続パスに固定（Docker ならボリューム or bind mount）。
-     鍵が変わると利用者の SSH に警告が出ます。
+     鍵が変わると利用者の SSH に警告が出ます。ホスト秘密鍵は**イメージには
+     焼き込まれず**、初回起動時にボリューム `/data`（`WICK_DATA`）内へ生成・保管
+     されるので、ボリュームを保てば鍵は固定されます。
 2. **PostgreSQL を使う**
 
    ```bash
@@ -398,7 +407,7 @@ docker compose -f deploy/docker-compose.yml --profile web --profile pg down -v
 
 | 症状 | 対処 |
 |---|---|
-| `ssh` でホスト鍵警告 | ボリューム削除で鍵が変わったため。`~/.ssh/known_hosts` の該当行を消すか、ホスト鍵を固定する |
+| `ssh` でホスト鍵警告（REMOTE HOST IDENTIFICATION HAS CHANGED） | ボリューム再作成などで鍵が変わったため。古い記録を消して繋ぎ直す: `ssh-keygen -R '[127.0.0.1]:2222'`（`localhost` で繋ぐなら `[localhost]:2222`）。鍵を固定したいときは「8. 本番運用」参照 |
 | 入力が二重に見える／ノート編集や rogue が崩れる／Ctrl-C で切断される | 端末(pty)無しで接続している。`ssh -t -p 2222 <id>@host` のように `-t` を付けて繋ぎ直す（全画面機能は pty が要る） |
 | エージェントが LLM 発話しない | `WICK_AGENT_MODEL_ENDPOINT`/`_MODEL` 未設定、または LLM 未起動。起動ログの `agents:` 行を確認 |
 | 検索されない | `--profile web` 未起動、`WICK_AGENT_WEB_MCP_URL` 未設定、`AGENTS.txt` の `web=on` 無し、トークン不一致のいずれか |
