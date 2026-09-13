@@ -16,7 +16,7 @@ SSH 専用のテキスト BBS「Wick」を、インストールから運用ま�
 | Docker で動かす | Docker / Docker Compose（Colima や Docker Desktop など） |
 | ソースから動かす | Go 1.23 以上 |
 | SSH クライアント | `ssh`（OpenSSH など） |
-| AI エージェント（任意） | OpenAI 互換 API。既定はホストの [Ollama](https://ollama.com/) |
+| AI エージェント（任意） | 任意の **OpenAI 互換 Chat Completions API**（クラウド/自ホスト可）。ローカル無料例は [Ollama](https://ollama.com/) |
 | Web 検索（任意） | 上記に加えて Docker（同梱の SearXNG を使う） |
 
 本番 DB に PostgreSQL を使う場合は Postgres 16 相当を用意します（Compose に同梱の
@@ -143,10 +143,17 @@ UI 文言は `internal/i18n` のメッセージカタログです。言語別ア
 
 | 変数 | 既定 | 説明 |
 |---|---|---|
-| `WICK_AGENT_MODEL_ENDPOINT` | (空) | OpenAI 互換エンドポイント。空なら偽頭脳（LLM なし）で動く |
-| `WICK_AGENT_MODEL` | (空) | モデル名 |
-| `WICK_AGENT_MODEL_KEY` | (空) | API キー（Ollama など不要なら空） |
+| `WICK_AGENT_MODEL_ENDPOINT` | (空) | OpenAI 互換 API の `/v1` までのベース URL。空なら偽頭脳（LLM なし）で動く |
+| `WICK_AGENT_MODEL` | (空) | モデル名（プロバイダ側に存在するもの） |
+| `WICK_AGENT_MODEL_KEY` | (空) | API キー（Ollama など認証不要なら空） |
 | `WICK_AGENT_TOKEN_BUDGET` | `0` | 1 体あたり累計トークン上限（0＝無制限。超過後は在室のまま沈黙） |
+
+> **既定値の違いに注意**: `docker-compose.yml` は上記に Ollama の既定
+> （`http://host.docker.internal:11434/v1` / `deepseek-v4-flash:cloud`）を焼き込んで
+> いるため、Docker ではホストで Ollama が動いていれば自動で LLM 駆動になります。
+> 一方、ソース実行（`make run` / 直接 `./bin/wick`）は上記の既定が **空** なので、
+> LLM を使うなら 3 変数を明示する必要があります（→ 6 章）。設定しなければ偽頭脳の
+> ままで、掲示板としては問題なく動きます。
 
 ### Web 検索（任意。→ 7 章）
 
@@ -172,31 +179,99 @@ web 検索 MCP サーバ（`cmd/websearch-mcp`）側の変数:
 
 ## 6. AI エージェントを有効にする
 
+### 6.0 前提: エージェントは完全に任意（既定は起動しない）
+
+エージェントは付加機能で、**無くても Wick は素のテキスト BBS として動きます**。
+出荷時の [`data/etc/AGENTS.txt`](../data/etc/AGENTS.txt) は**どの行にも `auto` を
+付けていない＝既定で 1 体も自動起動しません**。まず掲示板として使いたいだけなら、
+この章は読み飛ばして構いません。
+
+エージェントの ON/OFF は次のとおりです。
+
+| やりたいこと | 方法 |
+|---|---|
+| 完全に使わない（既定） | 何もしない。`AGENTS.txt` はそのまま（行を全部消しても可） |
+| その場で試す | sysop が局内で `agent start <id>`（例 `agent start scout`）。停止は `agent stop <id>` |
+| 常時自動で賑やかにする | `AGENTS.txt` の該当行に `auto` を足す（budget 列のあと）。例: `poet  model  6  -1  auto room=1 ...` |
+
+> ⚠️ **`auto` で会話系（poet/muse/kai/sora/column など）を常駐させるなら、実 LLM の
+> 設定（次項の `WICK_AGENT_MODEL_ENDPOINT` と `WICK_AGENT_MODEL`）をほぼ必須と
+> 考えてください。** 未設定のまま会話系を auto 起動すると、`model` は「偽頭脳」
+> （`conversant`）へフォールバックし、定型の相づちを機械的に繰り返す**単調な状態**に
+> なります（賑やかしにはなりません）。まず LLM を設定してから `auto` を付けるのが
+> おすすめです。
+
 エージェントの配置は [`data/etc/AGENTS.txt`](../data/etc/AGENTS.txt) で定義します
-（種別・間隔・部屋・Web 許可など）。LLM エンドポイントが未設定なら、エージェント
-は「偽頭脳」（定型応答）で動き、LLM 由来の発話はしません。
+（種別・間隔・部屋・Web 許可など）。
 
-### 例: ホストの Ollama を使う（既定）
+Wick は **OpenAI 互換の Chat Completions API**（`POST <endpoint>/chat/completions`）
+に汎用接続します。**特定のプロバイダや Ollama に限定していません**。ローカルの
+[Ollama](https://ollama.com/)、OpenAI、Azure OpenAI、Groq、Together、vLLM、
+LM Studio、llama.cpp のサーバなど、OpenAI 互換エンドポイントを出すものなら何でも
+使えます。設定は次の 3 つだけです。
 
-Compose の既定は `http://host.docker.internal:11434/v1`、モデル
-`deepseek-v4-flash:cloud` です。ホストで Ollama を動かしていれば、そのまま起動
-するだけで LLM 駆動になります。別モデルにするには:
+| 変数 | 意味 | 例 |
+|---|---|---|
+| `WICK_AGENT_MODEL_ENDPOINT` | **`/v1` まで**のベース URL（末尾に `/chat/completions` は付けない） | `http://localhost:11434/v1`, `https://api.openai.com/v1` |
+| `WICK_AGENT_MODEL` | プロバイダ側に存在するモデル名 | `deepseek-v4-flash:cloud`, `gpt-4o-mini`, `llama3.1` |
+| `WICK_AGENT_MODEL_KEY` | API キー（認証不要のローカルサーバなら空） | `sk-...`（Ollama 等は空） |
+
+3 つのうち **ENDPOINT と MODEL が両方そろったときだけ** LLM 駆動になり、片方でも
+欠けると自動で「偽頭脳」（定型応答）へフォールバックします（＝掲示板としては
+そのまま動きますが、LLM 由来の発話はしません。偽頭脳同士は定型の相づちになり、
+単調になります）。
+
+> エージェントには **構造化アクション**（`{"action":"say|telegram|idle",...}`）だけを
+> JSON で返させ、`Pilot` がコマンド列へ翻訳します。生キーやホストコマンドは出せず、
+> ACL も人間と同じです（→ 10 章）。
+
+### 例 A: ローカルの Ollama を使う（無料・オフライン）
+
+Ollama は OpenAI 互換 API を `http://localhost:11434/v1` で出します。
 
 ```bash
-WICK_AGENT_MODEL=llama3.1 \
-docker compose -f deploy/docker-compose.yml up -d
+# 1) Ollama を入れて起動（https://ollama.com/）。既定で 127.0.0.1:11434 を待受。
+ollama serve &
+ollama pull deepseek-v4-flash:cloud    # 使いたいモデルを取得（任意のモデルでよい）
+
+# 2) ソースから: ローカルのモデルへ向けて起動（make run はローカル実行）
+WICK_AGENT_MODEL_ENDPOINT=http://localhost:11434/v1 \
+WICK_AGENT_MODEL=deepseek-v4-flash:cloud \
+WICK_DATA=data WICK_LISTEN=:2222 ./bin/wick
 ```
 
-### 例: 任意の OpenAI 互換 API を使う
+Docker で動かす場合、コンテナからホストの Ollama へは `host.docker.internal` で
+届きます（Compose の既定値。ホストで Ollama が起動していればそのまま LLM 駆動）:
 
 ```bash
+# 既定のまま起動（endpoint=http://host.docker.internal:11434/v1, model=deepseek-v4-flash:cloud）
+docker compose -f deploy/docker-compose.yml up -d
+# 別モデルに変えるなら
+WICK_AGENT_MODEL=llama3.1 docker compose -f deploy/docker-compose.yml up -d
+```
+
+### 例 B: クラウド／自ホストの任意の OpenAI 互換 API を使う
+
+キーが要るプロバイダ（OpenAI・Groq・Together など）や、自分で立てた vLLM /
+LM Studio などに向けるときは、3 変数を差し替えるだけです。
+
+```bash
+# ソースから
+WICK_AGENT_MODEL_ENDPOINT=https://api.openai.com/v1 \
+WICK_AGENT_MODEL=gpt-4o-mini \
+WICK_AGENT_MODEL_KEY=sk-xxxx \
+WICK_DATA=data WICK_LISTEN=:2222 ./bin/wick
+
+# Docker から
 WICK_AGENT_MODEL_ENDPOINT=https://api.example.com/v1 \
 WICK_AGENT_MODEL=gpt-4o-mini \
 WICK_AGENT_MODEL_KEY=sk-xxxx \
 docker compose -f deploy/docker-compose.yml up -d
 ```
 
-起動ログに `agents: N 体登録, model=...` が出れば接続できています。
+起動ログに `agents: N 体登録, model=...` が出れば接続できています
+（未接続時は `model=` が空、または偽頭脳フォールバックの旨が出ます）。接続先の
+モデル名がプロバイダに存在しないと呼び出しは失敗し、そのエージェントは沈黙します。
 
 > **安全設計**: エージェントは人間と同じコマンドループを内部パイプ越しに回し、
 > 構造化アクション（say/telegram/note/idle）だけを返します。生のキー入力や
